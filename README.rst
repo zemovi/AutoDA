@@ -13,12 +13,12 @@ for Deep Learning.
 Features
 ========
 
-** Data augmentation pipeline**, applying an augmentation pipeline with optimized parameters can be done simply by:
+* ** Data augmentation pipeline**, applying an augmentation pipeline with optimized parameters can be done simply by:
 
 ..  code-block::python
     augmented_data = augment(data)
 
-Based on `keras <https://keras.io/>`_ that provides:
+Based on `keras <https://keras.io/>`_ that:
     * Allows for easy and fast prototyping (through user friendliness, modularity, and extensibility).
     * Supports both convolutional networks and recurrent networks, as well as combinations of the two.
     * Runs seamlessly on CPU and GPU.
