@@ -13,8 +13,7 @@ for Deep Learning.
 Features
 ========
 
-* ** Data augmentation pipeline**, applying an augmentation pipeline with optimized
-     parameters can be done simply by:
+** Data augmentation pipeline**, applying an augmentation pipeline with optimized parameters can be done simply by:
 
 ..  code-block::python
     augmented_data = augment(data)
