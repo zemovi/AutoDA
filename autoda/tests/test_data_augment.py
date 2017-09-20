@@ -1,21 +1,15 @@
 #!/usr/bin/python3
 # -*- coding: iso-8859-15 -*-
 
-import sys
-sys.path.append('..')
-
-import unittest
 import pytest
-
+import unittest
 import numpy as np
 
-from random import randint, choice
-
-from matplotlib import pyplot as plt
 import keras
 from keras import backend as K
 
-from param_net import ImageAugmentation, generate_batches, pad, crop
+from autoda.data_augmentation import ImageAugmentation, crop, pad
+from autoda.preprocessing import generate_batches
 
 try:
     from hypothesis import given
@@ -27,14 +21,13 @@ except ImportError:
 else:
     hypothesis_available = True
 
-# (cifar10_images, y_train), _ = cifar10.load_data()
 
-
-@pytest.mark.skipif(not hypothesis_available, reason="")
+@pytest.mark.skipif(not hypothesis_available, reason="Hypothesis Test Package not installed"
+)
 class HypothesisTest(unittest.TestCase):
+    """ Base class for property-based tests that use 'hypothesis' strategies. """
     @classmethod
     def random_image_strategy(cls, keras_dataset=keras.datasets.cifar10, n_images=1):
-        # XXX: Do the things necessary to set up stuff
         (images, y_train), _ = keras_dataset.load_data()
         all_data = list(zip(images, y_train))
 
@@ -50,24 +43,8 @@ class HypothesisTest(unittest.TestCase):
         return st.sampled_from(images_with_labels)
 
 
-class MyTest(HypothesisTest):
-    def setUp(self):
-        self.n_channels = 3  # channels in cifar
-        self.image_width = 32  # image_width in cifar
-        self.image_height = 32  # image_height in cifar
-
-    @given(HypothesisTest.random_image_strategy(n_images=100))
-    def test_test(self, images):
-        print("IMAGE:", images[0])
-        first_image, first_label = images[0]
-        print(first_image)
-        print()
-        print(first_label)
-        assert(len(images) == 100)
-
-
 @pytest.mark.skipif(not hypothesis_available, reason="Package 'Hypothesis' not installed")
-class TestBatchGeneration(MyTest):
+class TestBatchGeneration(HypothesisTest):
 
     """
     def setUp(self):
@@ -84,8 +61,8 @@ class TestBatchGeneration(MyTest):
             self.x_train = np.asarray(random_images)
 
     """
-
     def assertBatchDimensions(self, batch, batch_size):
+        print("BATCH_DIM", batch.shape)
         if batch_size == 1:
             images = batch[0]
             labels = batch[1]
@@ -99,8 +76,6 @@ class TestBatchGeneration(MyTest):
         assert(images.shape[1] == self.n_channels)
         assert(images.shape[2] == self.image_width)
         assert(images.shape[3] == self.image_height)
-
-
 
     @given(
         st.integers(min_value=1),
@@ -116,7 +91,7 @@ class TestBatchGeneration(MyTest):
         self.assertBatchDimensions(batch, min(batch_size, len(images)))
 
     @given(
-        st.integers(max_value=0)
+        st.integers(max_value=0),
         HypothesisTest.random_image_strategy(n_images=np.random.randint(2, 100))
     )
     def test_batch_size_illegal_value(self, batch_size, images):
@@ -125,9 +100,9 @@ class TestBatchGeneration(MyTest):
             next(gen)
 
     """
-    def test_batch_shouldnot_overlap(self):
+    def test_batch_shouldnot_overlap(self, batch_size, images):
         batch_size = self.n_images // 10
-        gen = generate_batches(self.x_train, batch_size=batch_size)
+        gen = generate_batches(x_train=images, batch_size=batch_size)
         batch1 = next(gen)
         batch2 = next(gen)
         self.assertFalse(np.array_equal(batch1[-1], batch2[0]))

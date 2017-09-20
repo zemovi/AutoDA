@@ -1,6 +1,6 @@
 test:
 	py.test -v --cov=autoda
-	make test-notebooks
+	#make test-notebooks
 
 tests: test
 
