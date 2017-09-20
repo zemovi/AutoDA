@@ -1,11 +1,10 @@
 import numpy as np
 import logging
-import keras
 from keras import backend as K
 
 __all__ = (
         "generate_batches"
-        )
+)
 
 
 def enforce_image_format(image_format):
@@ -13,6 +12,7 @@ def enforce_image_format(image_format):
         K.set_image_data_format(image_format)
         return function
     return decorator
+
 
 @enforce_image_format("channels_first")
 def generate_batches(x_train, y_train, batch_size=1, seed=None):
@@ -67,23 +67,28 @@ def generate_batches(x_train, y_train, batch_size=1, seed=None):
     >>> N, C , H, W = 100, 3, 32, 32  # 100 RGB images with 32 X 32 pixels
     >>> from keras.datasets import cifar10
     >>> (x_train, y_train), _ = cifar10.load_data()
-    >>> x_train, y_train = x_train[10,:,:,:], y_train[10]
+    >>> x_train, y_train = x_train[0:10], y_train[0:10]
     >>> x_train.shape, y_train.shape
     ((10, 3, 32, 32), (10, 1))
     >>> gen = generate_batches(x_train, y_train, batch_size=20)
     >>> batch = next(gen)  # extract a batch
     >>> x_batch, y_batch = batch
     >>> x_batch.shape, y_batch.shape
-    ((10, 3, 32, 32), (10,1 ))
+    ((10, 3, 32, 32), (10, 1 ))
 
     In this case, the batch contains exactly all datapoints:
     >>> np.allclose(x_batch, x_train), np.allclose(y_batch, y_train)
     True, True
 
     """
-    # sanity check input
-    assert(batch_size > 0)
-    assert(len(x_train.shape) == 4), "Input to batch generation must be 4D array: (N_IMAGES, N_CHANNELS, IMAGE_HEIGHT, IMAGE_WIDTH)"
+    # sanity check input data
+    assert(isinstance(batch_size, int)), "generate_batches: batch size must be an integer."
+
+    assert(batch_size > 0), "generate_batches: batch size must be greater than zero."
+
+    assert(len(x_train.shape) == 4), "generate_batches: Input to batch generation must be 4D array: (N_IMAGES, N_CHANNELS, IMAGE_HEIGHT, IMAGE_WIDTH)"
+
+    assert(seed is None or isinstance(seed, int)), "generate_batches: seed must be an integer or `None`"
 
     if seed is not None:
         np.random.seed(seed)
@@ -95,8 +100,8 @@ def generate_batches(x_train, y_train, batch_size=1, seed=None):
     batch_size = min(initial_batch_size, n_examples)
 
     if initial_batch_size != batch_size:
-        print("Not enough datapoints to form a minibatch. "
-              "Batchsize was set to {}".format(batch_size))
+        logging.error("Not enough datapoints to form a minibatch. "
+                      "Batchsize was set to {}".format(batch_size))
 
     start = 0
     while True:
