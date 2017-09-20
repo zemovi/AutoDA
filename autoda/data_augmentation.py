@@ -8,85 +8,7 @@ import ConfigSpace as CS
 from keras.preprocessing.image import ImageDataGenerator
 from keras import backend as K
 
-
-def generate_batches(x_train, y_train, batch_size=1, seed=None):
-    """ Infinite generator of random minibatches for a dataset.
-
-        For general reference on (infinite) generators, see:
-        https://www.python.org/dev/peps/pep-0255/
-
-    Parameters
-    ----------
-    X: np.ndarray (N, W, H, C)
-        Images to group into minibatches.
-
-    batch_size : int, optional
-        Number of images to put into one batch.
-
-    seed: int, optional
-        Random seed to use during batch generation.
-        Defaults to `None`.
-
-    Yields
-    -------
-    image_batch: np.ndarray (X, X)
-        Batches of images of batch size `batch_size`.
-
-    Examples
-    -------
-    Simple batch extraction example:
-    >>> import numpy as np
-    >>> N, C , H, W = 100, 3, 32, 32  # 100 RGB images with 32 X 32 pixels
-    >>> X = np.asarray([np.random.uniform(-10, 10, D) for _ in range(N)]) # XXX Use images here instead
-    >>> X.shape
-    (100, 3)
-    >>> batch_size = 20
-    >>> gen = generate_batches(X, batch_size)
-    >>> batch = next(gen)  # extract a batch
-    XXX VALIDATE RESULTS HERE
-
-    Batch extraction resizes batch size if dataset is too small:
-    >>> import numpy as np
-    >>> N, D = 10, 3  # 10 datapoints with 3 features each
-    >>> X = np.asarray([np.random.uniform(-10, 10, D) for _ in range(N)]) # XXX Use images here instead
-    >>> X.shape
-    (10, 3)
-    >>> batch_size = 20
-    >>> gen = generate_batches(X, batch_size)
-    >>> batch = next(gen)  # extract a batch XXX Ensure that batch size is now 10, e.g. by asserting batch shape
-    XXX VALIDATE RESULTS HERE
-
-    In this case, the batch contains exactly all datapoints:
-    >>> np.allclose(batch, X)
-    True
-
-    """
-    assert(batch_size > 0)
-    assert(len(x_train.shape) == 4), "Input to batch generation must be 4D array: (N_IMAGES, N_CHANNELS, IMAGE_HEIGHT, IMAGE_WIDTH)"
-
-    if seed is not None:
-        np.random.seed(seed)
-
-    if K.image_data_format() == 'channels_last':
-        K.set_image_data_format('channels_first')
-    n_examples = x_train.shape[0]
-
-    initial_batch_size = batch_size
-
-    batch_size = min(initial_batch_size, n_examples)
-
-    if initial_batch_size != batch_size:
-        print("Not enough datapoints to form a minibatch. "
-              "Batchsize was set to {}".format(batch_size))
-
-    start = 0
-    while True:
-        if start > n_examples - batch_size:
-            return
-        minibatch_x = x_train[start: start + batch_size]
-        minibatch_y = y_train[start: start + batch_size]
-        start += batch_size
-        yield minibatch_x, minibatch_y
+from autoda.preprocessing import generate_batches, enforce_image_format
 
 
 def crop(batch, crop_width=32, crop_height=32, n_crops=1):
@@ -191,12 +113,6 @@ def pad(batch, pad_height, pad_width):
 
     return np.asarray(batch_padded)
 
-
-def enforce_image_format(image_format):
-    def decorator(function):
-        K.set_image_data_format(image_format)
-        return function
-    return decorator
 
 
 @enforce_image_format("channels_first")
