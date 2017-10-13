@@ -128,28 +128,54 @@ class ImageAugmentation(object):
                                           rescale=self.config["rescale"],
                                           horizontal_flip=self.config["horizontal_flip"],
                                           vertical_flip=self.config["vertical_flip"])
+    from collections import namedtuple
+    ParameterRange = namedtuple("ParameterRange", ["lower", "default", "upper"])
 
     @staticmethod
     def get_config_space(
-            rotation_range=[0, 0, 180],
-            rescale=[0, 0, 2],
-            pad=None,
-            horizontal_flip=[True, False],
-            vertical_flip=[True, False],
+            rotation_range=ParameterRange(lower=0, default=0, upper=180),
+            rescale=ParameterRange(lower=0.5, default=1.0, upper=2.0),
+            pad=ParameterRange(lower=0, default=0, upper=8),
+            horizontal_flip_default=True,
+            vertical_flip_default=True,
             seed=None):
 
-        cs = CS.ConfigurationSpace(seed)
+        config_space = CS.ConfigurationSpace(seed)
 
-        HPs = [CS.UniformIntegerHyperparameter("rotation_range", lower=rotation_range[0], upper=rotation_range[2], default=rotation_range[1]),
-               CS.UniformIntegerHyperparameter("rescale", lower=rescale[0], upper=rescale[2], default=rescale[1]),
-               CS.UniformIntegerHyperparameter("pad", lower=0, upper=8),
-               CS.CategoricalHyperparameter('horizontal_flip', horizontal_flip),
-               CS.CategoricalHyperparameter("vertical_flip", vertical_flip),
-               ]
+        hyperparameters = (
+            CS.UniformIntegerHyperparameter(
+                "rotation_range",
+                lower=rotation_range.lower,
+                default=rotation_range.default,
+                upper=rotation_range.upper
+            ),
+            CS.UniformFloatHyperparameter(
+                "rescale",
+                lower=rescale.lower,
+                default=rescale.default,
+                upper=rescale.upper
+            ),
+            CS.UniformIntegerHyperparameter(
+                "pad",
+                lower=pad.lower,
+                default=pad.default,
+                upper=pad.upper
+            ),
+            CS.CategoricalHyperparameter(
+                'horizontal_flip',
+                choices=(True, False),
+                default=horizontal_flip_default
+            ),
+            CS.CategoricalHyperparameter(
+                'vertical_flip',
+                choices=(True, False),
+                default=vertical_flip_default
+            )
+        )
 
-        [cs.add_hyperparameter(hp) for hp in HPs]
+        config_space.add_hyperparameters(hyperparameters)
 
-        return cs
+        return config_space
 
     def apply_transform(self, x_train, y_train, batch_size=1):
         """  Applies image augmentation on given training samples
