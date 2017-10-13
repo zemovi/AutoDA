@@ -7,8 +7,6 @@ import sys
 
 from os.path import dirname, realpath, join as path_join
 
-
-# Import SMAC utilities
 from smac.scenario.scenario import Scenario
 from smac.facade.smac_facade import SMAC
 
@@ -20,7 +18,6 @@ from keras.layers import Conv2D, MaxPooling2D
 PARENT_DIRECTORY = path_join(dirname(realpath(__file__)), "..")
 sys.path.insert(0, PARENT_DIRECTORY)
 
-# Import ConfigSpace from ImageAugmentation Class
 from autoda.data_augmentation import ImageAugmentation
 
 
@@ -101,25 +98,24 @@ def cnn_from_config(config):
 
     # Evaluate model with test data set and share sample prediction results
     score = model.evaluate(x_test, y_test, verbose=0)
-
     # return validation accuracy
-    return score[1]
+    return 1 - score[1]
 
 
 # Optimize with SMAC
 
-cs = ImageAugmentation.get_config_space()
+config_space = ImageAugmentation.get_config_space()
 # Scenario object
 scenario = Scenario({"run_obj": "quality",   # we optimize quality (alternatively runtime)
-                     "runcount-limit": 200,  # maximum function evaluations
-                     "cs": cs,               # configuration space
+                     "runcount-limit": 100,  # maximum function evaluations
+                     "cs": config_space,               # configuration space
                      "deterministic": "true"
                      })
 
 # Example call of the function
 # It returns: Status, Cost, Runtime, Additional Infos
-def_value = cs.get_default_configuration()
-print("Default Value: {}".format(def_value))
+default_value = config_space.get_default_configuration()
+print("Default Value: {}".format(default_value))
 
 # Optimize, using a SMAC-object
 print("Optimizing! Depending on your machine, this might take a few minutes.")
@@ -128,6 +124,6 @@ smac = SMAC(scenario=scenario, rng=np.random.RandomState(42),
 
 incumbent = smac.optimize()
 
-inc_value = cnn_from_config(incumbent)
+incumbent_value = cnn_from_config(incumbent)
 
-print("Optimized Value: {}".format(inc_value))
+print("Optimized Value: {}".format(incumbent_value))
