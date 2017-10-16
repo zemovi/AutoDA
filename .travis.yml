@@ -16,6 +16,7 @@ before_install:
         - ./configure
         - make
         - sudo make install
+        - cd -
  
 install:
         - pip install --upgrade pip
