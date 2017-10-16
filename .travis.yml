@@ -10,6 +10,7 @@ before_install:
         - sudo apt-get update
         - sudo apt-get install -q libatlas3gf-base libatlas-dev liblapack-dev gfortran git
         - sudo apt-get install build-essential swig3.0
+        - echo `swig -version`
 install:
         - pip install --upgrade pip
         - pip install cython
