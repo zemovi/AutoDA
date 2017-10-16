@@ -7,4 +7,4 @@ pytest>=3.2.2
 hypothesis>=3.27.0
 smac>=0.7.0
 ConfigSpace>=0.3.10
-
+nbval
