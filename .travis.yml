@@ -27,8 +27,11 @@ install:
         - pip install coveralls 
 
 script: 
-    - py.test -v --doctest-modules --cov=autoda 
-# - make -C autoda test-notebooks
+    # XXX Add doctests and notebooks again
+    # py.test -v --doctest-modules --cov=autoda 
+    # make -C autoda test-notebooks
+    - py.test -v --cov=autoda 
+
 
 after_success:
         - coveralls
