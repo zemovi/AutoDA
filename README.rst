@@ -5,7 +5,6 @@ AutoDA
 |Build Status|
 |Docs_|
 |Coverage_|
-|Health_|
 
 AutoDA is a Python framework for automated real-time data augmentation
 for Deep Learning.
@@ -34,10 +33,6 @@ Based on `keras <https://keras.io/>`_ that:
 .. |Coverage_| image:: https://coveralls.io/repos/github/NMisgana/AutoDA/badge.svg
                :target: https://coveralls.io/github/NMisgana/AutoDA
                :alt: Coverage
-
-.. |Health_| image:: https://landscape.io/github/NMisgana/AutoDA/master/landscape.svg?style=flat
-             :target: https://landscape.io/github/NMisgana/AutoDA/master
-             :alt: Code Health
 
 
 Install
