@@ -5,4 +5,4 @@ formats:
 requirements_file: docs/requirements-docs.txt
 
 python:
-version: 3.5
+    version: 3.5
