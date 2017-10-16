@@ -9,8 +9,6 @@ test-notebooks:
 	    py.test --nbval-lax $$notebook ; \
 	done
 
-
-
 doc:
 	make -C ../docs html 
 
