@@ -26,10 +26,9 @@ install:
         - python setup.py install
         - pip install coveralls 
 
-script: 
+#script: 
 # - make -C autoda test-notebooks
 # - py.test -v --doctest-modules --cov=autoda 
-        - echo "Tests scream: write me!"
 
 after_success:
         - coveralls
