@@ -13,7 +13,7 @@ for Deep Learning.
 Features
 ========
 
-* ** Data augmentation pipeline**, applying an augmentation pipeline with optimized parameters can be done simply by:
+* **Data augmentation pipeline**, applying an augmentation pipeline with optimized parameters can be done simply by:
 
 ..  code-block::python
     augmented_data = augment(data)
@@ -27,7 +27,7 @@ Based on `keras <https://keras.io/>`_ that:
 .. |Build Status| image:: https://travis-ci.org/NMisgana/AutoDA.svg?branch_master
                   :target: https://travis-ci.org/NMisgana/AutoDA
 
-.. |Docs_| image:: https://readthedocs.org/projects/AutoDA/badge/?version=latest
+.. |Docs_| image:: https://readthedocs.org/projects/autoda/badge/?version=latest
            :target: http://autoda.readthedocs.io/en/latest/
            :alt: Docs
 
