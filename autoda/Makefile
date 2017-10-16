@@ -4,6 +4,9 @@ test:
 
 tests: test
 
+dummy:
+	echo "WRITE TESTS!"
+
 test-notebooks:
 	for notebook in 'find ../notebooks/* -name ".ipynb"'; do \
 	    py.test --nbval-lax $$notebook ; \

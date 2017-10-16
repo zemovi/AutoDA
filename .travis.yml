@@ -26,7 +26,8 @@ install:
         - python setup.py install
         - pip install coveralls 
 
-#script: 
+script: 
+    - make -C autoda dummy
 # - make -C autoda test-notebooks
 # - py.test -v --doctest-modules --cov=autoda 
 
