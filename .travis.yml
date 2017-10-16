@@ -10,7 +10,6 @@ before_install:
         - sudo apt-get update
         - sudo apt-get install -q libatlas3gf-base libatlas-dev liblapack-dev gfortran git
         - sudo apt-get install build-essential swig3.0
-        - git clone https://github.com/automl/SMAC3 && cd SMAC3 && cat requirements.txt | xargs -n 1 -L 1 pip3 install && python3 setup.py install && cd -
 
 install:
         - pip install --upgrade pip
