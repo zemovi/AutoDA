@@ -8,7 +8,7 @@ os:
 
 before_install:
         - sudo apt-get update
-        - sudo apt-get install -q libatlas3gf-base libatlas-dev liblapack-dev gfortran git
+        - sudo apt-get install -q libatlas3gf-base libatlas-dev liblapack-dev gfortran git automake libpc3-dev byacc
         - sudo apt-get install build-essential
         - git clone https://github.com/swig/swig.git
         - cd swig
