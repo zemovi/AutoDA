@@ -1,0 +1,3 @@
+[submodule "AutoData"]
+	path = AutoData
+	url = https://github.com/NMisgana/AutoData.git
