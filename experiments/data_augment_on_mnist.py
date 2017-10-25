@@ -10,10 +10,8 @@ Gets to 99.25% test accuracy after 12 epochs
 from __future__ import print_function
 import sys
 import os
-from os.path import dirname, realpath, join as path_join
-# parent directory of the folder in which this script is located
-PARENT_DIRECTORY = path_join(dirname(realpath(__file__)), "..")
-sys.path.insert(0, PARENT_DIRECTORY)
+from os.path import abspath, dirname, realpath, join as path_join
+from sklearn.model_selection import train_test_split
 
 import time
 import json
@@ -24,15 +22,17 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 
-from os.path import abspath, join as path_join
+# parent directory of the folder in which this script is located
+PARENT_DIRECTORY = path_join(dirname(realpath(__file__)), "..")
+sys.path.insert(0, PARENT_DIRECTORY)
 
 from autoda.data_augmentation import ImageAugmentation
 
 
 config_id = int(sys.argv[1])
+epochs = int(sys.argv[2])  # Default value: 12
 batch_size = 128
 num_classes = 10
-epochs = 12
 
 # input image dimensions
 img_rows, img_cols = 28, 28
@@ -52,12 +52,17 @@ x_test = x_test.astype('float32')
 x_train /= 255
 x_test /= 255
 
+x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train)
+
 print('x_train shape:', x_train.shape)
+print('x_valid shape:', x_valid.shape)
 print(x_train.shape[0], 'train samples')
+print(x_valid.shape[0], 'validation samples')
 print(x_test.shape[0], 'test samples')
 
 # Convert class vectors to binary class matrices.
 y_train = keras.utils.to_categorical(y_train, num_classes)
+y_valid = keras.utils.to_categorical(y_valid, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
 
@@ -85,19 +90,21 @@ compile_time = time.time() - start_compile_time
 
 if not data_augmentation:
     print('Not using data augmentation.')
+    configs = {}
     start_time = time.time()
     history = model.fit(x_train, y_train,
                         batch_size=batch_size,
                         epochs=epochs,
-                        validation_data=(x_test, y_test),
+                        validation_data=(x_valid, y_valid),
                         shuffle=True)
 
     runtime = time.time() - start_time
+    print("Run time", runtime)
 else:
     print('Using real-time data augmentation.')
     # This will do preprocessing and realtime data augmentation:
 
-    config = ImageAugmentation.get_config_space().sample_configuration() #seed=123
+    config = ImageAugmentation.get_config_space().sample_configuration()  # seed=123
 
     imagegen = ImageAugmentation(config)
 
@@ -107,9 +114,11 @@ else:
                                                            batch_size=batch_size),
                                   steps_per_epoch=x_train.shape[0] // batch_size,
                                   epochs=epochs,
-                                  validation_data=(x_test, y_test))
+                                  validation_data=(x_valid, y_valid))
 
     runtime = time.time() - start_time
+
+    print("Run time", runtime)
 
 # Evaluate model with test data set and share sample prediction results
 score = model.evaluate(x_test, y_test, verbose=0)
