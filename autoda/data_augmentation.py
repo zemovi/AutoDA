@@ -1,12 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: iso-8859-15 -*-
 
-from abc import ABCMeta
+import time
 import numpy as np
 import ConfigSpace as CS
 
 from keras.preprocessing.image import ImageDataGenerator
-from keras import backend as K
 
 from autoda.preprocessing import generate_batches, enforce_image_format
 
@@ -39,8 +38,6 @@ def crop(batch, crop_width=32, crop_height=32, n_crops=1):
     assert(len(batch.shape) == 4), "Input to crop must be 4D array: \
                                     (N_IMAGES, N_CHANNELS, IMAGE_HEIGHT, IMAGE_WIDTH)\
                                     but found"
-    n_examples = batch.shape[0]
-    n_channels = batch.shape[1]
     image_height = batch.shape[2]
     image_width = batch.shape[3]
 
@@ -112,7 +109,6 @@ def pad(batch, pad_height, pad_width):
         batch_padded.append(image_padded)
 
     return np.asarray(batch_padded)
-
 
 
 @enforce_image_format("channels_first")
@@ -197,13 +193,17 @@ class ImageAugmentation(object):
         for batch, y_train in generate_batches(x_train, y_train, batch_size=batch_size):
 
             if self.pad_width != 0 or self.pad_height != 0:
+                pad_start_time = time.time()
                 padded_batch = pad(batch, self.pad_height, self.pad_width)
+                print("Time_Padding", time.time() - pad_start_time)
+                crop_start_time = time.time()
                 cropped_batch = crop(padded_batch, crop_width=x_train.shape[2], crop_height=x_train.shape[3])  # n_crops is by default 1
+                print("Time_Cropping", time.time() - crop_start_time)
             else:
                 # do not crop or pad if pad_width == 0 and pad_height == 0
                 cropped_batch = batch
-
+            st = time.time()
             # apply ImageDataGenerator instance on (padded and cropped) sample
             self.datagen.fit(cropped_batch)
-
+            print("TIME_AUGMENTATION", time.time() - st)
             yield from self.datagen.flow(cropped_batch, y_train, batch_size=batch_size)

@@ -21,10 +21,11 @@ CIFAR10_N_DATAPOINTS, *_ = CIFAR10_X_TRAIN.shape
 
 class TestSimpleBatchGeneration(unittest.TestCase):
     """Test simple case for batch generation with valid inputs"""
+
     @pytest.mark.skipif(not HYPOTHESIS_INSTALLED, reason="Hypothesis not installed!")
     @given(integers(min_value=1, max_value=CIFAR10_N_DATAPOINTS))
     def test_batchsize_equals_n_images(self, batch_size):
-        """TODO: Docstring for test_batchsize_equals_n_images.
+        """ Test if number of images generated in a batch are of given batch size.
         Returns
         -------
         TODO
@@ -49,9 +50,44 @@ class TestSimpleBatchGeneration(unittest.TestCase):
             )
             next(generator)
 
-    # XXX: Test batchsize larger n_images
+    @given(integers(min_value=CIFAR10_N_DATAPOINTS))
+    def test_batchsize_larger_n_images(self, batch_size):
+        """
+
+        """
+        generator = generate_batches(
+            CIFAR10_X_TRAIN, CIFAR10_Y_TRAIN, batch_size=batch_size
+        )
+
+        x_batch, y_batch = next(generator)
+        n_images, *_ = x_batch.shape
+
+        assert n_images == CIFAR10_N_DATAPOINTS
 
     # XXX: Test that all images in batches are in dataset
+    @pytest.mark.skipif(not HYPOTHESIS_INSTALLED, reason="Hypothesis not installed!")
+    @given(integers(min_value=1, max_value=10))
+    def test_all_images_in_dataset(self, batch_size):
+        generator = generate_batches(
+            CIFAR10_X_TRAIN, CIFAR10_Y_TRAIN, batch_size=batch_size
+        )
+
+        x_batch, y_batch = next(generator)
+
+        import numpy as np
+        in_dataset = np.zeros(len(x_batch))
+        last_image = 0
+
+        for image in CIFAR10_X_TRAIN:
+            if in_dataset.all():
+                continue
+            if np.array_equal(x_batch[last_image, ...], image):
+                in_dataset[last_image] = 1
+                last_image += 1
+        assert in_dataset.all()
+
+
+        # assert all(image in CIFAR10_X_TRAIN for image in x_batch)
 
     # XXX: Test that batches are subsequent and have no overlap
 

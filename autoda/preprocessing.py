@@ -3,7 +3,7 @@ import logging
 from keras import backend as K
 
 __all__ = (
-        "generate_batches"
+    "generate_batches"
 )
 
 
@@ -16,10 +16,10 @@ def enforce_image_format(image_format):
 
 @enforce_image_format("channels_first")
 def generate_batches(x_train, y_train, batch_size=1, seed=None):
-    """ Infinite generator of random minibatches for a dataset.
+    """ Generator that yields subsequent batches of `batch_size`
+        images from dataset `(x_train, y_train)`.
 
-        For general reference on (infinite) generators, see:
-        https://www.python.org/dev/peps/pep-0255/
+        XXX: What happens if batch size > len(x_train)
 
     Parameters
     ----------
@@ -45,6 +45,7 @@ def generate_batches(x_train, y_train, batch_size=1, seed=None):
 
     Yields
     -------
+    THING IS BROKEN!
     image_batch: np.ndarray (X, X)
         Batches of images of batch size `batch_size`.
 
@@ -74,11 +75,11 @@ def generate_batches(x_train, y_train, batch_size=1, seed=None):
     >>> batch = next(gen)  # extract a batch
     >>> x_batch, y_batch = batch
     >>> x_batch.shape, y_batch.shape
-    ((10, 3, 32, 32), (10, 1 ))
+    ((10, 3, 32, 32), (10, 1))
 
     In this case, the batch contains exactly all datapoints:
     >>> np.allclose(x_batch, x_train), np.allclose(y_batch, y_train)
-    True, True
+    (True, True)
 
     """
     # sanity check input data
