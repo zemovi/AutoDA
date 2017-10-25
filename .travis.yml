@@ -31,6 +31,7 @@ script:
     # py.test -v --doctest-modules --cov=autoda 
     # make -C autoda test-notebooks
     - py.test -v --cov=autoda 
+    - PWD
 
 
 after_success:
