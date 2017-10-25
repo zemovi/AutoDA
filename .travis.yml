@@ -30,8 +30,7 @@ script:
     # XXX Add doctests and notebooks again
     # py.test -v --doctest-modules --cov=autoda 
     # make -C autoda test-notebooks
-    - pwd
-    - py.test -v --cov=autoda 
+    - py.test --cov=autoda 
 
 
 after_success:
