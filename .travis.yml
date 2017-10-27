@@ -35,3 +35,7 @@ script:
 
 after_success:
         - coveralls
+
+notifications:
+    slack:
+        on_success: never
