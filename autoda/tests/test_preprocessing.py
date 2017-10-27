@@ -64,7 +64,7 @@ class TestSimpleBatchGeneration(unittest.TestCase):
 
         assert n_images == CIFAR10_N_DATAPOINTS
 
-    # XXX: Test that all images in batches are in dataset
+
     @pytest.mark.skipif(not HYPOTHESIS_INSTALLED, reason="Hypothesis not installed!")
     @given(integers(min_value=1, max_value=10))
     def test_all_images_in_dataset(self, batch_size):
