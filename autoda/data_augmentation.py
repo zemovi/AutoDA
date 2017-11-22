@@ -111,63 +111,135 @@ def pad(batch, pad_height, pad_width):
     return np.asarray(batch_padded)
 
 
+
+class ImgAugDataGenerator(object):
+    """ Wrapper over imgaug to simulate the ImageDataGenerator of keras. """
+    def __init__(self, crop_and_pad, rotation_lower, rotation_upper,
+            rotation_proability):
+        # set up parameters for img aug here
+        self.seq = iaa.Sequential(
+                [
+                    iaa.Sometimes(self.config["rotation_probability"])(
+                        iaa.Affine(
+                            rotate=(
+                                self.config["rotation_lower"],
+                                self.config["rotation_upper"]
+                            ),
+                        )
+                    ),
+
+                ], random_order=True
+        )
+
+
+    def flow(self, x_batch, y_batch, batch_size=32):
+        """ yield batches of augmented data of size batch size and their respective
+            labels
+        """
+            aug_x_batch = self.seq.augment_images(x_batch)
+            # TODO:  how to assign the corresponding label to the augmented image
+            # aug_y_batch =
+
+
+        yield aug_x_batch
+
+
+
 @enforce_image_format("channels_first")
 class ImageAugmentation(object):
     """Data augmentation for image data. """
-    def __init__(self, config):
+    def __init__(self, config, method="keras"):
 
         self.config = config
 
         self.pad_height = self.config["pad"]
         self.pad_width = self.config["pad"]
-        self.datagen = ImageDataGenerator(rotation_range=self.config["rotation_range"],
-                                          rescale=self.config["rescale"],
-                                          horizontal_flip=self.config["horizontal_flip"],
-                                          vertical_flip=self.config["vertical_flip"])
+        if method == "keras":
+            self.datagen = ImageDataGenerator(rotation_range=self.config["rotation_range"],
+                                              rescale=self.config["rescale"],
+                                              horizontal_flip=self.config["horizontal_flip"],
+                                              vertical_flip=self.config["vertical_flip"])
+        else:
+            self.datagen = ImgAugDataGenerator(
+                crop_and_pad=self.config(["crop_and_pad"],
+                rotation_lower = self.config(["rotation_lower"]),
+                rotation_upper = self.config(["rotation_upper"]),
+                rotation_proability = self.config(["rotation_proability"])
+            )
+
     from collections import namedtuple
     ParameterRange = namedtuple("ParameterRange", ["lower", "default", "upper"])
 
     @staticmethod
     def get_config_space(
-            rotation_range=ParameterRange(lower=0, default=0, upper=180),
-            rescale=ParameterRange(lower=0.5, default=1.0, upper=2.0),
+            method="keras",
+            keras_rotation_range=ParameterRange(lower=0, default=0, upper=180),
+            keras_rescale=ParameterRange(lower=0.5, default=1.0, upper=2.0),
             pad=ParameterRange(lower=0, default=0, upper=8),
-            horizontal_flip_default=True,
-            vertical_flip_default=True,
+            keras_horizontal_flip_default=True,
+            keras_vertical_flip_default=True,
             seed=None):
 
         config_space = CS.ConfigurationSpace(seed)
 
-        hyperparameters = (
-            CS.UniformIntegerHyperparameter(
-                "rotation_range",
-                lower=rotation_range.lower,
-                default=rotation_range.default,
-                upper=rotation_range.upper
-            ),
-            CS.UniformFloatHyperparameter(
-                "rescale",
-                lower=rescale.lower,
-                default=rescale.default,
-                upper=rescale.upper
-            ),
-            CS.UniformIntegerHyperparameter(
-                "pad",
-                lower=pad.lower,
-                default=pad.default,
-                upper=pad.upper
-            ),
-            CS.CategoricalHyperparameter(
-                'horizontal_flip',
-                choices=(True, False),
-                default=horizontal_flip_default
-            ),
-            CS.CategoricalHyperparameter(
-                'vertical_flip',
-                choices=(True, False),
-                default=vertical_flip_default
+        if method == "keras":
+            hyperparameters = (
+                CS.UniformIntegerHyperparameter(
+                    "rotation_range",
+                    lower=keras_rotation_range.lower,
+                    default=keras_rotation_range.default,
+                    upper=keras_rotation_range.upper
+                ),
+                CS.UniformFloatHyperparameter(
+                    "rescale",
+                    lower=keras_rescale.lower,
+                    default=keras_rescale.default,
+                    upper=keras_rescale.upper
+                ),
+                CS.UniformIntegerHyperparameter(
+                    "pad",
+                    lower=pad.lower,
+                    default=pad.default,
+                    upper=pad.upper
+                ),
+                CS.CategoricalHyperparameter(
+                    'horizontal_flip',
+                    choices=(True, False),
+                    default=keras_horizontal_flip_default
+                ),
+                CS.CategoricalHyperparameter(
+                    'vertical_flip',
+                    choices=(True, False),
+                    default=keras_vertical_flip_default
+                )
             )
-        )
+        elif method == "imgaug":
+            # XXX: imgaug config space parameters here
+            hyperparameters = (
+                CS.UniformIntegerHyperparameter(
+                    "rotation_lower",
+                    lower=imgaug_rotation_lower.lower,
+                    default=imgaug_rotation_lower.default,
+                    upper=imgaug_rotation_lower.upper,
+                ),
+                CS.UniformIntegerHyperparameter(
+                    "rotation_upper",
+                    lower=imgaug_rotation_upper.lower,
+                    default=imgaug_rotation_upper.default,
+                    upper=imgaug_rotation_upper.upper,
+                ),
+
+                CS.UniformFloatHyperparameter(
+                    "rotation_probability",
+                    lower=imgaug_rotation_probability.lower,
+                    default=imgaug_rotation_probability.default,
+                    upper=imgaug_rotation_probability.upper,
+                ),
+            )
+        else:
+            raise ValueError(
+                "Augmentation method '{}' unsupported!".format(method)
+            )
 
         config_space.add_hyperparameters(hyperparameters)
 
@@ -195,15 +267,11 @@ class ImageAugmentation(object):
             if self.pad_width != 0 or self.pad_height != 0:
                 pad_start_time = time.time()
                 padded_batch = pad(batch, self.pad_height, self.pad_width)
-                print("Time_Padding", time.time() - pad_start_time)
                 crop_start_time = time.time()
                 cropped_batch = crop(padded_batch, crop_width=x_train.shape[2], crop_height=x_train.shape[3])  # n_crops is by default 1
-                print("Time_Cropping", time.time() - crop_start_time)
             else:
                 # do not crop or pad if pad_width == 0 and pad_height == 0
                 cropped_batch = batch
-            st = time.time()
             # apply ImageDataGenerator instance on (padded and cropped) sample
-            self.datagen.fit(cropped_batch)
-            print("TIME_AUGMENTATION", time.time() - st)
+
             yield from self.datagen.flow(cropped_batch, y_train, batch_size=batch_size)
