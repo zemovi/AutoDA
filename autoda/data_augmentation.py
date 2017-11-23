@@ -8,22 +8,46 @@ from imgaug import augmenters as iaa
 
 
 class ImageAugmentation(object):
-    """Data augmentation for image data. """
+    """Data augmentation for image data.
+
+    Parameters
+    ----------
+
+    Examples
+    -------
+
+    """
+
     def __init__(self, config):
 
         self.config = config
 
         self.seq = iaa.Sequential(
             [
+                iaa.Pad(percent=(
+                    self.config["pad_lower"],
+                    self.config["pad_upper"]
+                    )
+                ),
+
+                iaa.Crop(percent=(
+                    self.config["crop_lower"],
+                    self.config["crop_upper"]
+                    )
+                ),
+                iaa.Flipud(self.config["vertical_flip"]),
                 iaa.Fliplr(self.config["horizontal_flip"]),
                 iaa.Sometimes(self.config["rotation_probability"],
                               iaa.Affine(
-                                    rotate=(
-                                        self.config["rotation_lower"],
-                                        self.config["rotation_upper"]
-                                    ),
-                              )
+                                  rotate=(
+                                      self.config["rotation_lower"],
+                                      self.config["rotation_upper"]
+                                  ),
+                            )
                 ),
+                iaa.Affine(
+                    scale={"x": (self.config["scale_lower"], self.config["scale_upper"]),
+                           "y": (self.config["scale_lower"], self.config["scale_upper"])})
 
             ], random_order=True
         )
@@ -37,7 +61,14 @@ class ImageAugmentation(object):
             rotation_lower=ParameterRange(lower=-180, default=0, upper=0),
             rotation_upper=ParameterRange(lower=0, default=0, upper=180),
             rotation_probability=ParameterRange(lower=0, default=0, upper=1),
+            scale_lower=ParameterRange(lower=0.5, default=1., upper=1.),
+            scale_upper=ParameterRange(lower=1., default=1., upper=2.),
             horizontal_flip=ParameterRange(lower=0, default=0, upper=1),
+            vertical_flip=ParameterRange(lower=0, default=0, upper=1),
+            crop_lower=ParameterRange(lower=0, default=0, upper=0.1),
+            crop_upper=ParameterRange(lower=0.1, default=0.1, upper=0.3),
+            pad_lower=ParameterRange(lower=0, default=0, upper=0.1),
+            pad_upper=ParameterRange(lower=0.1, default=0.1, upper=0.3),
             seed=None):
 
         config_space = CS.ConfigurationSpace(seed)
@@ -68,6 +99,53 @@ class ImageAugmentation(object):
                 lower=horizontal_flip.lower,
                 default=horizontal_flip.default,
                 upper=horizontal_flip.upper
+            ),
+
+            CS.UniformFloatHyperparameter(
+                'vertical_flip',
+                lower=vertical_flip.lower,
+                default=vertical_flip.default,
+                upper=vertical_flip.upper
+            ),
+
+            CS.UniformFloatHyperparameter(
+                "scale_lower",
+                lower=scale_lower.lower,
+                default=scale_lower.default,
+                upper=scale_lower.upper,
+            ),
+            CS.UniformFloatHyperparameter(
+                "scale_upper",
+                lower=scale_upper.lower,
+                default=scale_upper.default,
+                upper=scale_upper.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
+                "crop_lower",
+                lower=crop_lower.lower,
+                default=crop_lower.default,
+                upper=crop_lower.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
+                "crop_upper",
+                lower=crop_upper.lower,
+                default=crop_upper.default,
+                upper=crop_upper.upper,
+            ),
+            CS.UniformFloatHyperparameter(
+                "pad_lower",
+                lower=pad_lower.lower,
+                default=pad_lower.default,
+                upper=pad_lower.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
+                "pad_upper",
+                lower=pad_upper.lower,
+                default=pad_upper.default,
+                upper=pad_upper.upper,
             ),
         )
 
