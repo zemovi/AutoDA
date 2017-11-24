@@ -20,25 +20,25 @@ from experiments.benchmarks.lenet_random_search_benchmark import lenet_function
 
 def main():
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Simple python script to run experiments on augmented data using random search')
 
     parser.add_argument(
-        "benchmark"
+        "--benchmark", help="Neural network to be trained with augmented data"
     )
     parser.add_argument(
-        "dataset"
+        "--num_epochs", default=12, help="Number of epochs", type=int
     )
     parser.add_argument(
-        "num_epochs", default=12
+        "--batch_size", default=128, help="Size of a mini batch", type=int
     )
     parser.add_argument(
-        "batch_size", default=128
+        "--augment", default=True, help="If the data should be augmented", type=bool
     )
     parser.add_argument(
-        "augment", default=True
+        "--dataset", help="Dataset to train neural network on"
     )
     parser.add_argument(
-        "run_id"
+        "--run_id", help="The id of single job"
     )
 
     args = parser.parse_args()
@@ -53,14 +53,14 @@ def main():
     }[args.dataset]
 
     path = path_join(abspath("."), "Workspace/MastersThesis/AutoDA/experiments/random_search/results", args.dataset)
-    print("path", path)
+
     num_epochs, batch_size, augment = int(args.num_epochs), int(args.batch_size), args.augment
 
     sample_config = ImageAugmentation.get_config_space().sample_configuration()  # seed=123
 
     results = objective_function(
-        sample_config, dataset, num_epochs,
-        batch_size, augment
+        sample_config=sample_config, dataset=dataset, max_epochs=num_epochs,
+        batch_size=batch_size, augment=augment
     )
 
     path = path_join(abspath("."), "Workspace/MastersThesis/AutoDA/experiments/random_search/results", args.dataset)
