@@ -14,12 +14,12 @@ def enforce_image_format(image_format):
     return decorator
 
 
-@enforce_image_format("channels_first")
+@enforce_image_format("channels_last")
 def generate_batches(x_train, y_train, batch_size=1, seed=None):
     """ Generator that yields subsequent batches of `batch_size`
-        images from dataset `(x_train, y_train)`.
+        images from dataset `(x_train, y_train)` starting from
+        a random point.
 
-        XXX: What happens if batch size > len(x_train)
 
     Parameters
     ----------
@@ -45,7 +45,6 @@ def generate_batches(x_train, y_train, batch_size=1, seed=None):
 
     Yields
     -------
-    THING IS BROKEN!
     image_batch: np.ndarray (X, X)
         Batches of images of batch size `batch_size`.
 
@@ -91,24 +90,27 @@ def generate_batches(x_train, y_train, batch_size=1, seed=None):
 
     assert(seed is None or isinstance(seed, int)), "generate_batches: seed must be an integer or `None`"
 
-    if seed is not None:
-        np.random.seed(seed)
+    if seed is None:
+        # use instead of random.seed()=> seeds all numpy code afterwards with given seed
+        seed = np.random.randint(1, 1000000)
 
-    n_examples = x_train.shape[0]
+    rng = np.random.RandomState()
+    rng.seed(seed)
+
+    n_samples = x_train.shape[0]
 
     initial_batch_size = batch_size
 
-    batch_size = min(initial_batch_size, n_examples)
+    batch_size = min(initial_batch_size, n_samples)
 
     if initial_batch_size != batch_size:
         logging.error("Not enough datapoints to form a minibatch. "
                       "Batchsize was set to {}".format(batch_size))
 
-    start = 0
     while True:
-        if start > n_examples - batch_size:
-            return
+        start = rng.randint(0, (n_samples - batch_size + 1))
+
         minibatch_x = x_train[start: start + batch_size]
         minibatch_y = y_train[start: start + batch_size]
-        start += batch_size
+
         yield minibatch_x, minibatch_y
