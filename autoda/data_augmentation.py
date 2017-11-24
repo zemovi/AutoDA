@@ -24,17 +24,23 @@ class ImageAugmentation(object):
 
         self.seq = iaa.Sequential(
             [
-                iaa.Pad(percent=(
-                    self.config["pad_lower"],
-                    self.config["pad_upper"]
-                    )
-                ),
+                iaa.Sometimes(self.config["pad_probability"],
+                              iaa.Pad(
+                                  percent=(
+                                      self.config["pad_lower"],
+                                      self.config["pad_upper"]
+                                      )
+                                  )
+                              ),
 
-                iaa.Crop(percent=(
-                    self.config["crop_lower"],
-                    self.config["crop_upper"]
-                    )
-                ),
+                iaa.Sometimes(self.config["crop_probability"],
+                              iaa.Crop(
+                                  percent=(
+                                      self.config["crop_lower"],
+                                      self.config["crop_upper"]
+                                      )
+                                  )
+                              ),
                 iaa.Flipud(self.config["vertical_flip"]),
                 iaa.Fliplr(self.config["horizontal_flip"]),
                 iaa.Sometimes(self.config["rotation_probability"],
@@ -42,13 +48,15 @@ class ImageAugmentation(object):
                                   rotate=(
                                       self.config["rotation_lower"],
                                       self.config["rotation_upper"]
-                                  ),
-                            )
-                ),
-                iaa.Affine(
-                    scale={"x": (self.config["scale_lower"], self.config["scale_upper"]),
-                           "y": (self.config["scale_lower"], self.config["scale_upper"])})
-
+                                      )
+                                  )
+                              ),
+                iaa.Sometimes(self.config["scale_probability"],
+                              iaa.Affine(
+                                  scale={"x": (self.config["scale_lower"], self.config["scale_upper"]),
+                                         "y": (self.config["scale_lower"], self.config["scale_upper"])}
+                                  )
+                              )
             ], random_order=True
         )
 
@@ -63,12 +71,15 @@ class ImageAugmentation(object):
             rotation_probability=ParameterRange(lower=0, default=0, upper=1),
             scale_lower=ParameterRange(lower=0.5, default=1., upper=1.),
             scale_upper=ParameterRange(lower=1., default=1., upper=2.),
+            scale_probability=ParameterRange(lower=0, default=0, upper=1),
             horizontal_flip=ParameterRange(lower=0, default=0, upper=1),
             vertical_flip=ParameterRange(lower=0, default=0, upper=1),
             crop_lower=ParameterRange(lower=0, default=0, upper=0.1),
             crop_upper=ParameterRange(lower=0.1, default=0.1, upper=0.3),
+            crop_probability=ParameterRange(lower=0, default=0, upper=1),
             pad_lower=ParameterRange(lower=0, default=0, upper=0.1),
             pad_upper=ParameterRange(lower=0.1, default=0.1, upper=0.3),
+            pad_probability=ParameterRange(lower=0, default=0, upper=1),
             seed=None):
 
         config_space = CS.ConfigurationSpace(seed)
@@ -122,6 +133,13 @@ class ImageAugmentation(object):
             ),
 
             CS.UniformFloatHyperparameter(
+                "scale_probability",
+                lower=scale_probability.lower,
+                default=scale_probability.default,
+                upper=scale_probability.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
                 "crop_lower",
                 lower=crop_lower.lower,
                 default=crop_lower.default,
@@ -134,6 +152,14 @@ class ImageAugmentation(object):
                 default=crop_upper.default,
                 upper=crop_upper.upper,
             ),
+
+            CS.UniformFloatHyperparameter(
+                "crop_probability",
+                lower=crop_probability.lower,
+                default=crop_probability.default,
+                upper=crop_probability.upper,
+            ),
+
             CS.UniformFloatHyperparameter(
                 "pad_lower",
                 lower=pad_lower.lower,
@@ -146,6 +172,13 @@ class ImageAugmentation(object):
                 lower=pad_upper.lower,
                 default=pad_upper.default,
                 upper=pad_upper.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
+                "pad_probability",
+                lower=pad_probability.lower,
+                default=pad_probability.default,
+                upper=scale_probability.upper,
             ),
         )
 
