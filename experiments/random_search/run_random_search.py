@@ -15,7 +15,7 @@ PARENT_DIRECTORY = path_join(dirname(realpath(__file__)), "..", "..")
 sys.path.insert(0, PARENT_DIRECTORY)
 
 from autoda.data_augmentation import ImageAugmentation
-from experiments.benchmarks.lenet_random_search_benchmark import lenet_function
+from experiments.benchmarks.lenet_benchmark import lenet_function
 
 
 def main():
