@@ -52,7 +52,6 @@ def main():
         "cifar10": cifar10
     }[args.dataset]
 
-    path = path_join(abspath("."), "Workspace/MastersThesis/AutoDA/experiments/random_search/results", args.dataset)
 
     num_epochs, batch_size, augment = int(args.num_epochs), int(args.batch_size), args.augment
 
@@ -63,7 +62,7 @@ def main():
         batch_size=batch_size, augment=augment
     )
 
-    path = path_join(abspath("."), "Workspace/MastersThesis/AutoDA/experiments/random_search/results", args.dataset)
+    path = path_join(abspath("."), "AutoDA/experiments/random_search/results", args.dataset)
 
     with open(os.path.join(path, "random_search_%d.json" % int(args.run_id)), "w") as fh:
         json.dump(results, fh)
