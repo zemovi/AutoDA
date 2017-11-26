@@ -32,7 +32,7 @@ def main():
         "--batch_size", default=128, help="Size of a mini batch", type=int
     )
     parser.add_argument(
-        "--augment", default=True, help="If the data should be augmented", type=bool
+        "--augment", default=False, help="If the data should be augmented", type=bool
     )
     parser.add_argument(
         "--dataset", help="Dataset to train neural network on"
