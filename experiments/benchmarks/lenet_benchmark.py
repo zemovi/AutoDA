@@ -133,7 +133,8 @@ def lenet_function(sample_config, dataset, max_epochs, batch_size, augment):
     result = dict()
     if not augment:
     	 result["configs"] = {}
-    result["configs"] = sample_config.get_dictionary()
+    else:
+        result["configs"] = sample_config.get_dictionary()
     result["learning_curve"] = history.history
     result["train_accuracy"] = history.history['acc'][-1]
     result["validation_error"] = 1 - score[1]
