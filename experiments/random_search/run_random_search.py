@@ -64,7 +64,7 @@ def main():
 
     path = path_join(abspath("."), "AutoData/random_search", args.dataset)
 
-    with open(os.path.join(path, "random_search_{}_{}".format(args.dataset, int(args.run_id))), "w") as fh:
+    with open(os.path.join(path, "random_search_{}_{}.json".format(args.dataset, int(args.run_id))), "w") as fh:
         json.dump(results, fh)
 
 
