@@ -121,7 +121,7 @@ def lenet_function(sample_config, dataset, max_epochs, batch_size, augment):
         num_epochs += len(history.history.get("loss", []))
         duration_last_epoch = (time.time() - start_time) - used_budget
         used_budget += duration_last_epoch
-        print(used_budget, duration_last_epoch, time_budget)
+        print("used_budget", used_budget, "duration_last_epoch", duration_last_epoch, "time_budget", time_budget)
         runtime.append(time.time() - start_time)
 
     # Evaluate model with test data set and share sample prediction results
@@ -138,6 +138,7 @@ def lenet_function(sample_config, dataset, max_epochs, batch_size, augment):
     result["train_accuracy"] = history.history['acc'][-1]
     result["validation_error"] = 1 - score[1]
     result["runtime"] = runtime
+    result["used_budget"] = used_budget
     result["augment"] = augment
 
     return result
