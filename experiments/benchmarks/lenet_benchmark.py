@@ -15,9 +15,11 @@ from sklearn.model_selection import train_test_split
 from autoda.data_augmentation import ImageAugmentation
 from autoda.preprocessing import enforce_image_format
 
+from collections import defaultdict
 
 import logging
 logging.basicConfig(level=logging.INFO)
+
 
 
 @enforce_image_format("channels_last")
@@ -69,10 +71,11 @@ def lenet_function(sample_config, dataset, max_epochs, batch_size, augment):
     num_classes = y_train.shape[1]
 
     num_epochs = 0
-    time_budget = 800
+    time_budget = 900
     used_budget = 0.
     duration_last_epoch = 0.
     runtime = []
+    train_history ={}
 
     # LeNet
     model = Sequential()
@@ -92,7 +95,22 @@ def lenet_function(sample_config, dataset, max_epochs, batch_size, augment):
     model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer=keras.optimizers.Adam(),
                   metrics=['accuracy'])
-    print("Do Augment", augment)
+
+    def _merge_dict(dict_list):
+        dd = defaultdict(list)
+        for d in dict_list:
+            for key, value in d.items():
+                if not hasattr(value, '__iter__'):
+                    value = (value,)
+                [dd[key].append(v) for v in value]
+        return dict(dd)
+
+    def _update_history(train_history, history):
+        if len(train_history) == 0:
+            train_history = history
+        else:
+            train_history = _merge_dict([train_history, history])
+        return train_history
 
 
     start_time = time.time()
@@ -106,6 +124,8 @@ def lenet_function(sample_config, dataset, max_epochs, batch_size, augment):
 	                        validation_data=(x_valid, y_valid),
                                 initial_epoch=num_epochs,
                                 shuffle=True)
+
+            train_history = _update_history(train_history, history.history)
         else:
             print('Using real-time data augmentation.')
             augmenter = ImageAugmentation(sample_config)
@@ -118,6 +138,8 @@ def lenet_function(sample_config, dataset, max_epochs, batch_size, augment):
 					      validation_data=(x_valid, y_valid),
 					      initial_epoch=num_epochs
 					      )
+            train_history = _update_history(train_history, history.history)
+
         num_epochs += len(history.history.get("loss", []))
         duration_last_epoch = (time.time() - start_time) - used_budget
         used_budget += duration_last_epoch
@@ -135,11 +157,11 @@ def lenet_function(sample_config, dataset, max_epochs, batch_size, augment):
     	 result["configs"] = {}
     else:
         result["configs"] = sample_config.get_dictionary()
-    result["learning_curve"] = history.history
     result["train_accuracy"] = history.history['acc'][-1]
     result["validation_error"] = 1 - score[1]
     result["runtime"] = runtime
     result["used_budget"] = used_budget
+    result["train_history"] = train_history
     result["augment"] = augment
 
     return result
