@@ -62,7 +62,7 @@ def main():
         batch_size=batch_size, augment=augment
     )
 
-    path = path_join(abspath("."), "AutoDA/experiments/random_search/results", args.dataset)
+    path = path_join(abspath("."), "AutoData/random_search", args.dataset)
 
     with open(os.path.join(path, "random_search_%d.json" % int(args.run_id)), "w") as fh:
         json.dump(results, fh)
