@@ -114,3 +114,19 @@ def generate_batches(x_train, y_train, batch_size=1, seed=None):
         minibatch_y = y_train[start: start + batch_size]
 
         yield minibatch_x, minibatch_y
+
+
+@enforce_image_format("channels_last")
+def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
+    assert len(inputs) == len(targets)
+    if shuffle:
+        indices = np.arange(len(inputs))
+        np.random.shuffle(indices)
+    for start_idx in range(0, len(inputs) - batchsize + 1, batchsize):
+        if shuffle:
+            excerpt = indices[start_idx:start_idx + batchsize]
+        else:
+            excerpt = slice(start_idx, start_idx + batchsize)
+        inp_exc = inputs[excerpt]
+
+        yield inp_exc, targets[excerpt]

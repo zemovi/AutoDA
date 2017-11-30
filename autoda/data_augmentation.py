@@ -2,8 +2,8 @@
 # -*- coding: iso-8859-15 -*-
 
 import ConfigSpace as CS
-
 from autoda.preprocessing import generate_batches
+# from autoda.preprocessing import iterate_minibatches
 from imgaug import augmenters as iaa
 
 
@@ -22,42 +22,43 @@ class ImageAugmentation(object):
 
         self.config = config
 
-        self.seq = iaa.Sequential(
-            [
-                iaa.Sometimes(self.config["pad_probability"],
-                              iaa.Pad(
-                                  percent=(
-                                      self.config["pad_lower"],
-                                      self.config["pad_upper"]
+        self.seq = iaa.Sometimes(self.config["augment_probability"],
+                iaa.Sequential([
+                    iaa.Sometimes(self.config["pad_probability"],
+                                  iaa.Pad(
+                                      percent=(
+                                          self.config["pad_lower"],
+                                          self.config["pad_upper"]
+                                          )
                                       )
-                                  )
-                              ),
+                                  ),
 
-                iaa.Sometimes(self.config["crop_probability"],
-                              iaa.Crop(
-                                  percent=(
-                                      self.config["crop_lower"],
-                                      self.config["crop_upper"]
+                    iaa.Sometimes(self.config["crop_probability"],
+                                  iaa.Crop(
+                                      percent=(
+                                          self.config["crop_lower"],
+                                          self.config["crop_upper"]
+                                          )
+                                      )
+                                  ),
+                    iaa.Flipud(self.config["vertical_flip"]),
+                    iaa.Fliplr(self.config["horizontal_flip"]),
+                    iaa.Sometimes(self.config["rotation_probability"],
+                                  iaa.Affine(
+                                      rotate=(
+                                          self.config["rotation_lower"],
+                                          self.config["rotation_upper"]
+                                          )
+                                      )
+                                  ),
+                    iaa.Sometimes(self.config["scale_probability"],
+                                  iaa.Affine(
+                                      scale={"x": (self.config["scale_lower"], self.config["scale_upper"]),
+                                             "y": (self.config["scale_lower"], self.config["scale_upper"])}
                                       )
                                   )
-                              ),
-                iaa.Flipud(self.config["vertical_flip"]),
-                iaa.Fliplr(self.config["horizontal_flip"]),
-                iaa.Sometimes(self.config["rotation_probability"],
-                              iaa.Affine(
-                                  rotate=(
-                                      self.config["rotation_lower"],
-                                      self.config["rotation_upper"]
-                                      )
-                                  )
-                              ),
-                iaa.Sometimes(self.config["scale_probability"],
-                              iaa.Affine(
-                                  scale={"x": (self.config["scale_lower"], self.config["scale_upper"]),
-                                         "y": (self.config["scale_lower"], self.config["scale_upper"])}
-                                  )
-                              )
-            ], random_order=True
+                ], random_order=False
+            )
         )
 
     from collections import namedtuple
@@ -66,6 +67,7 @@ class ImageAugmentation(object):
     @staticmethod
     def get_config_space(
 
+            augment_probability=ParameterRange(lower=0, default=0.5, upper=1),
             rotation_lower=ParameterRange(lower=-180, default=0, upper=0),
             rotation_upper=ParameterRange(lower=0, default=0, upper=180),
             rotation_probability=ParameterRange(lower=0, default=0, upper=1),
@@ -178,7 +180,13 @@ class ImageAugmentation(object):
                 "pad_probability",
                 lower=pad_probability.lower,
                 default=pad_probability.default,
-                upper=scale_probability.upper,
+                upper=pad_probability.upper,
+            ),
+            CS.UniformFloatHyperparameter(
+                "augment_probability",
+                lower=augment_probability.lower,
+                default=augment_probability.default,
+                upper=augment_probability.upper,
             ),
         )
 
@@ -203,5 +211,13 @@ class ImageAugmentation(object):
                      Batches of augmented images
         """
 
-        for batch, y_train in generate_batches(x_train, y_train, batch_size=batch_size):
-            yield self.seq.augment_images(batch), y_train
+        # for batch_x, batch_y in iterate_minibatches(inputs=x_train, targets=y_train, batchsize=batch_size):
+        for batch_x, batch_y in generate_batches(x_train, y_train, batch_size=batch_size):
+
+            aug_batch_x = self.seq.augment_images(batch_x)
+
+            aug_batch_x = aug_batch_x.astype('float32')
+            aug_batch_x /= 255
+            yield aug_batch_x, batch_y
+
+
