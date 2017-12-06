@@ -3,6 +3,7 @@
 
 import ConfigSpace as CS
 from autoda.preprocessing import generate_batches
+from autoda.util.normalization import normalize
 # from autoda.preprocessing import iterate_minibatches
 from imgaug import augmenters as iaa
 
@@ -194,7 +195,21 @@ class ImageAugmentation(object):
 
         return config_space
 
-    def apply_transform(self, x_train, y_train, batch_size=1):
+    def normalize_data(self, arg1):
+        """TODO: Docstring for normalize_data.
+
+        Parameters
+        ----------
+        arg1 : TODO
+
+        Returns
+        -------
+        TODO
+
+        """
+        pass
+
+    def apply_transform(self, x_train, y_train, mean, variance, batch_size=1):
         """  Applies image augmentation on given training samples
 
         Parameters
@@ -216,8 +231,8 @@ class ImageAugmentation(object):
 
             aug_batch_x = self.seq.augment_images(batch_x)
 
-            aug_batch_x = aug_batch_x.astype('float32')
-            aug_batch_x /= 255
+            # TODO: apply normalize data by pre-computed mean and variance
+            aug_batch_x = normalize(aug_batch_x, mean, variance)
             yield aug_batch_x, batch_y
 
 

@@ -52,10 +52,11 @@ def main():
         "cifar10": cifar10
     }[args.dataset]
 
-
     num_epochs, batch_size, augment = int(args.num_epochs), int(args.batch_size), args.augment
 
     sample_config = ImageAugmentation.get_config_space().sample_configuration()  # seed=123
+    # sample_config["augment_probability"] = 0
+    # print(sample_config)
 
     results = objective_function(
         sample_config=sample_config, dataset=dataset, max_epochs=num_epochs,
