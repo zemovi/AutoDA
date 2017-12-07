@@ -115,7 +115,7 @@ def lenet_function(sample_config, dataset, max_epochs, batch_size, augment):
 
     with K.tf.device('/gpu:1'):
 
-        K._set_session(K.tf.Session(config=K.tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)))
+        K.set_session(K.tf.Session(config=K.tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)))
         # LeNet
         model = Sequential()
         model.add(Conv2D(32, kernel_size=(3, 3),
