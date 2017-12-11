@@ -209,7 +209,7 @@ class ImageAugmentation(object):
         """
         pass
 
-    def apply_transform(self, x_train, y_train, mean, variance, batch_size=1):
+    def apply_transform(self, x_train, y_train, mean=None, variance=None, batch_size=1):
         """  Applies image augmentation on given training samples
 
         Parameters
@@ -231,8 +231,9 @@ class ImageAugmentation(object):
 
             aug_batch_x = self.seq.augment_images(batch_x)
 
-            # TODO: apply normalize data by pre-computed mean and variance
-            aug_batch_x = normalize(aug_batch_x, mean, variance)
+            if mean is not None and variance is not None:
+                aug_batch_x = normalize(aug_batch_x, mean, variance)
+
             yield aug_batch_x, batch_y
 
 
