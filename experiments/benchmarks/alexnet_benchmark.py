@@ -9,6 +9,8 @@ import keras.backend.tensorflow_backend as K
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
+from keras.layers.normalization import BatchNormalization
+
 
 
 from sklearn.model_selection import train_test_split
