@@ -3,6 +3,7 @@
 
 import unittest
 import pytest
+import numpy as np
 
 try:
     from hypothesis import given
@@ -52,9 +53,7 @@ class TestSimpleBatchGeneration(unittest.TestCase):
 
     @given(integers(min_value=CIFAR10_N_DATAPOINTS))
     def test_batchsize_larger_n_images(self, batch_size):
-        """
 
-        """
         generator = generate_batches(
             CIFAR10_X_TRAIN, CIFAR10_Y_TRAIN, batch_size=batch_size
         )
@@ -63,7 +62,6 @@ class TestSimpleBatchGeneration(unittest.TestCase):
         n_images, *_ = x_batch.shape
 
         assert n_images == CIFAR10_N_DATAPOINTS
-
 
     @pytest.mark.skipif(not HYPOTHESIS_INSTALLED, reason="Hypothesis not installed!")
     @given(integers(min_value=1, max_value=10))
@@ -74,7 +72,6 @@ class TestSimpleBatchGeneration(unittest.TestCase):
 
         x_batch, y_batch = next(generator)
 
-        import numpy as np
         in_dataset = np.zeros(len(x_batch))
         last_image = 0
 
@@ -85,11 +82,6 @@ class TestSimpleBatchGeneration(unittest.TestCase):
                 in_dataset[last_image] = 1
                 last_image += 1
         assert in_dataset.all()
-
-
-        # assert all(image in CIFAR10_X_TRAIN for image in x_batch)
-
-    # XXX: Test that batches are subsequent and have no overlap
 
 
 if __name__ == "__main__":
