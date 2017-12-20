@@ -2,8 +2,8 @@
 # -*- coding: iso-8859-15 -*-
 
 import ConfigSpace as CS
-from autoda.preprocessing import generate_batches
-from autoda.util.normalization import normalize
+from autoda.generate_batches import generate_batches
+from autoda.networks.utils import normalize
 # from autoda.preprocessing import iterate_minibatches
 from imgaug import augmenters as iaa
 
@@ -194,20 +194,6 @@ class ImageAugmentation(object):
         config_space.add_hyperparameters(hyperparameters)
 
         return config_space
-
-    def normalize_data(self, arg1):
-        """TODO: Docstring for normalize_data.
-
-        Parameters
-        ----------
-        arg1 : TODO
-
-        Returns
-        -------
-        TODO
-
-        """
-        pass
 
     def apply_transform(self, x_train, y_train, mean=None, variance=None, batch_size=1):
         """  Applies image augmentation on given training samples
