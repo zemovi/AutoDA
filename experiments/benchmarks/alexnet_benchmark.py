@@ -9,6 +9,8 @@ import keras.backend.tensorflow_backend as K
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
+from keras.layers.normalization import BatchNormalization
+
 
 
 from sklearn.model_selection import train_test_split
@@ -77,6 +79,10 @@ def preprocess_data(x_train, y_train, x_test, y_test, augment):
     x_valid = normalize(x_valid, mean, variance)
     x_test = normalize(x_test, mean, variance)
 
+    # reshape vector from (N,1) to (N,)
+    y_train = y_train.reshape((y_train.shape[0], ))
+    y_valid = y_valid.reshape((y_valid.shape[0], ))
+
     # dimensions of data
     print(x_train.shape, 'x_train Dimensions')
     print(x_train.shape[0], 'train samples')
@@ -99,15 +105,12 @@ def alexnet_function(sample_config, dataset, max_epochs, batch_size, augment):
     # preprocess data
     x_train, y_train, x_valid, y_valid, x_test, y_test, mean, variance = preprocess_data(x_train, y_train, x_test, y_test, augment)
 
-    img_rows, img_cols = x_train.shape[2], x_train.shape[2]
-
-    input_shape = (img_rows, img_cols, x_train.shape[3])  # NWHC
-
     num_classes = 10
+    print(y_train.shape, x_train.shape)
 
     print("number of classes", num_classes)
     num_epochs = 0
-    time_budget = 900
+    time_budget = 2000
     used_budget = 0.
     duration_last_epoch = 0.
     runtime = []
@@ -116,33 +119,31 @@ def alexnet_function(sample_config, dataset, max_epochs, batch_size, augment):
     with K.tf.device('/gpu:1'):
 
         K.set_session(K.tf.Session(config=K.tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)))
+
         # AlexNet
-
         model = Sequential()
-        model.add(Conv2D(32, (3, 3), padding='same',
-                         input_shape=input_shape))
+        model.add(Conv2D(140, (5, 5), padding='same',
+                         input_shape=x_train.shape[1:]))
+        model.add(BatchNormalization())
         model.add(Activation('relu'))
-        model.add(Conv2D(32, (3, 3)))
+        model.add(MaxPooling2D(pool_size=(3, 3), strides=2))
+        model.add(Conv2D(94, (5, 5)))
+        model.add(BatchNormalization())
         model.add(Activation('relu'))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
+        model.add(MaxPooling2D(pool_size=(3, 3), strides=2))
 
-        model.add(Conv2D(64, (3, 3), padding='same'))
+        model.add(Conv2D(126, (5, 5), padding='same'))
+        model.add(BatchNormalization())
         model.add(Activation('relu'))
-        model.add(Conv2D(64, (3, 3)))
-        model.add(Activation('relu'))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
-        model.add(Dropout(0.25))
+        model.add(MaxPooling2D(pool_size=(3, 3), strides=2))
 
         model.add(Flatten())
-        model.add(Dense(512))
-        model.add(Activation('relu'))
-        model.add(Dropout(0.5))
         model.add(Dense(num_classes))
         model.add(Activation('softmax'))
 
+        opt = keras.optimizers.Adam(lr=0.0016681005372000575)
         model.compile(loss=keras.losses.categorical_crossentropy,
-                      optimizer=keras.optimizers.Adam(),
+                      optimizer=opt,
                       metrics=['accuracy'])
 
         start_time = time.time()
