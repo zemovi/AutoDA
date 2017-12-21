@@ -1,21 +1,21 @@
-
 import hpbandster
 import hpbandster.distributed.utils
 from hpbandster.distributed.worker import Worker
 
-import time
 import sys
 from os.path import abspath, join as path_join
 sys.path.insert(0, abspath(path_join(__file__, "..", "..")))
 
 from autoda.data_augmentation import ImageAugmentation
 from autoda.networks.train import objective_function
+#from test_cifar10 import objective_function
 from keras.datasets import cifar10
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
 # this run hyperband sequentially
+
 
 class ImageAugmentationWorker(Worker):
         def __init__(self, benchmark=(objective_function, cifar10), *args, **kwargs):
@@ -33,11 +33,16 @@ class ImageAugmentationWorker(Worker):
             For dramatization, the function sleeps for one second, which emphasizes
             the speed ups achievable with parallel workers.
             """
+            print("Num_epochs", budget)
 
             results = self.function(
-                benchmark="AlexNet", sample_config=config, dataset=self.dataset, max_epochs=budget, batch_size=512
+                benchmark="AlexNet", configuration=config, dataset=self.dataset, max_epochs=budget, batch_size=512
             )
+
+            # results = self.function(config)
+            print("RES", results)
             loss = results["validation_loss"]
+            # loss = results
 
             return({
                 'loss': loss,   # this is the a mandatory field to run hyperband
