@@ -119,7 +119,7 @@ def train_evaluate(model, train_data, validation_data, data_mean, data_variance,
     return result
 
 
-def objective_function(configuration=None, dataset="cifar10", benchmark="AlexNet", max_epochs=40, batch_size=512):
+def objective_function(configuration=None, dataset="Cifar10", benchmark="AlexNet", max_epochs=40, batch_size=512):
 
     augment = configuration is not None
 
@@ -138,42 +138,16 @@ def objective_function(configuration=None, dataset="cifar10", benchmark="AlexNet
 
     start_time = time.time()
 
-    print("after", num_classes)
-
     config = K.tf.ConfigProto(log_device_placement=False, allow_soft_placement=True)
-    sess = K.tf.Session(config=config)
-    K.set_session(sess)
+    session = K.tf.Session(config=config)
+    K.set_session(session)
 
+    assert benchmark in ARCHITECTURES
+    # AlexNet
+    network_function = ARCHITECTURES[benchmark]
+    model = network_function(num_classes=num_classes, input_shape=input_shape)
     with K.tf.device("/gpu:1"):
         with sess.graph.as_default():
-            # assert benchmark in ARCHITECTURES
-            # AlexNet
-            # network_function = ARCHITECTURES[benchmark]
-            # model = network_function(num_classes=num_classes, input_shape=input_shape)
-
-            model = Sequential()
-            model.add(Conv2D(32, (3, 3), padding='same',
-                             input_shape=input_shape))
-
-            model.add(BatchNormalization())
-            model.add(Activation('relu'))
-            model.add(MaxPooling2D(pool_size=(3, 3), strides=2))
-            model.add(Conv2D(94, (5, 5)))
-            model.add(BatchNormalization())
-            model.add(Activation('relu'))
-            model.add(MaxPooling2D(pool_size=(3, 3), strides=2))
-
-            model.add(Conv2D(126, (5, 5), padding='same'))
-            model.add(BatchNormalization())
-            model.add(Activation('relu'))
-            model.add(MaxPooling2D(pool_size=(3, 3), strides=2))
-
-            model.add(Flatten())
-            model.add(Dense(num_classes))
-            model.add(Activation('softmax'))
-
-            # initiate RMSprop optimizer
-            # opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
 
             opt = keras.optimizers.Adam(lr=0.0016681005372000575)
 
@@ -223,7 +197,6 @@ def objective_function(configuration=None, dataset="cifar10", benchmark="AlexNet
 
             validation_loss, validation_accuracy = model.evaluate(x_validation, y_validation, verbose=0)
 
-    print("TRAIN_HIST", train_history)
     result = {
         "validation_loss": validation_loss,
         "validation_error": 1 - validation_accuracy,
