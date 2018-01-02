@@ -34,7 +34,7 @@ def alexnet(input_shape, num_classes,
     model.add(Dense(num_classes))
     model.add(Activation('softmax'))
 
-    model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
+   #  model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
     return model
 
