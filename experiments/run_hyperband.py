@@ -33,10 +33,10 @@ class ImageAugmentationWorker(Worker):
             For dramatization, the function sleeps for one second, which emphasizes
             the speed ups achievable with parallel workers.
             """
-            print("Num_epochs", budget)
+            print("Budget", budget)
 
             results = self.function(
-                benchmark="AlexNet", configuration=config, dataset=self.dataset, max_epochs=budget, batch_size=512
+                benchmark="AlexNet", configuration=config, dataset=self.dataset, max_epochs=40, batch_size=512, time_budget=budget
             )
 
             # results = self.function(config)
@@ -75,8 +75,8 @@ HB = hpbandster.HB_master.HpBandSter(
     config_generator=CG,
     run_id='0',
     eta=2,
-    min_budget=1,
-    max_budget=64,      # HB parameters
+    min_budget=200,
+    max_budget=900,      # HB parameters
     nameserver=nameserver,
     ns_port=ns_port,
     job_queue_sizes=(0, 1)
