@@ -37,7 +37,7 @@ class ImageAugmentationWorker(Worker):
             """
 
             results = self.function(
-                benchmark="AlexNet", configuration=config, dataset=self.dataset, max_epochs=40, batch_size=512, time_budget=budget
+                benchmark="AlexNet", configuration=config, dataset=self.dataset, max_epochs=100, batch_size=512, time_budget=budget
             )
 
             validation_error = results["validation_error"]
@@ -64,10 +64,6 @@ w.run(background=True)
 config_space = ImageAugmentation.get_config_space()
 CG = hpbandster.config_generators.RandomSampling(config_space)
 
-# this needs to be unique for concurent runs, i.e. when multiple
-# instances run at the same time, they have to have different ids
-# For this all_in_one example, it doesn't reall matter, as the
-# nameserver is unique to this run
 
 # instantiating Hyperband with some minimal configuration
 HB = hpbandster.HB_master.HpBandSter(
@@ -87,6 +83,10 @@ res = HB.run(5, min_n_workers=1)
 HB.shutdown(shutdown_workers=True)
 
 
+print(res.get_incumbent_trajectory())
+best_config_trajectory = res.get_incumbent_trajectory()
+
+
 path = path_join(abspath("."), "AutoData/hyperband")
 
 with open(os.path.join(path, 'hyperband.pickle'), 'wb') as f:
@@ -99,4 +99,4 @@ best_config = res.get_incumbent_trajectory()
 
 
 with open(os.path.join(path, "hyperband_result.json"), "w") as fh:
-        json.dump(best_config, fh)
+        json.dump(best_config_trajectory, fh)
