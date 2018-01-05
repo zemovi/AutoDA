@@ -23,42 +23,58 @@ class ImageAugmentation(object):
 
         self.config = config
 
-        self.seq = iaa.Sometimes(self.config["augment_probability"],
-                iaa.Sequential([
-                    iaa.Sometimes(self.config["pad_probability"],
-                                  iaa.Pad(
-                                      percent=(
-                                          self.config["pad_lower"],
-                                          self.config["pad_upper"]
-                                          )
-                                      )
-                                  ),
+        self.seq = iaa.Sometimes(
+            self.config["augment_probability"],
+            iaa.Sequential([
+                iaa.Sometimes(
+                    self.config["pad_probability"],
+                    iaa.Pad(
+                        percent=(
+                            self.config["pad_lower"],
+                            self.config["pad_upper"]
+                        )
+                    )
+                ),
 
-                    iaa.Sometimes(self.config["crop_probability"],
-                                  iaa.Crop(
-                                      percent=(
-                                          self.config["crop_lower"],
-                                          self.config["crop_upper"]
-                                          )
-                                      )
-                                  ),
-                    iaa.Flipud(self.config["vertical_flip"]),
-                    iaa.Fliplr(self.config["horizontal_flip"]),
-                    iaa.Sometimes(self.config["rotation_probability"],
-                                  iaa.Affine(
-                                      rotate=(
-                                          self.config["rotation_lower"],
-                                          self.config["rotation_upper"]
-                                          )
-                                      )
-                                  ),
-                    iaa.Sometimes(self.config["scale_probability"],
-                                  iaa.Affine(
-                                      scale={"x": (self.config["scale_lower"], self.config["scale_upper"]),
-                                             "y": (self.config["scale_lower"], self.config["scale_upper"])}
-                                      )
-                                  )
-                ], random_order=False
+                iaa.Sometimes(
+                    self.config["crop_probability"],
+                    iaa.Crop(
+                        percent=(
+                            self.config["crop_lower"],
+                            self.config["crop_upper"]
+                        )
+                    )
+                ),
+                iaa.Flipud(self.config["vertical_flip"]),
+                iaa.Fliplr(self.config["horizontal_flip"]),
+                iaa.Sometimes(
+                    self.config["rotation_probability"],
+                    iaa.Affine(
+                        rotate=(
+                            self.config["rotation_lower"],
+                            self.config["rotation_upper"]
+                        )
+                    )
+                ),
+                iaa.Sometimes(
+                    self.config["scale_probability"],
+                    iaa.Affine(
+                        scale={
+                            "x": (self.config["scale_lower"], self.config["scale_upper"]),
+                            "y": (self.config["scale_lower"], self.config["scale_upper"])}
+                    )
+                ),
+
+                iaa.CoarseDropout(
+                    p=(
+                        self.config["coarse_dropout"]  # probability that a pixel is dropped
+                    ),
+                    size_percent=(
+                        self.config["coarse_dropout_size_percent"]
+                    )
+                )
+
+            ], random_order=False
             )
         )
 
@@ -83,6 +99,8 @@ class ImageAugmentation(object):
             pad_lower=ParameterRange(lower=0, default=0, upper=0.1),
             pad_upper=ParameterRange(lower=0.1, default=0.1, upper=0.3),
             pad_probability=ParameterRange(lower=0, default=0, upper=1),
+            coarse_dropout=ParameterRange(lower=0.0, default=0.01, upper=0.2),
+            coarse_dropout_size_percent=ParameterRange(lower=0.01, default=0.01, upper=0.50),
             seed=None):
 
         config_space = CS.ConfigurationSpace(seed)
@@ -189,6 +207,19 @@ class ImageAugmentation(object):
                 default=augment_probability.default,
                 upper=augment_probability.upper,
             ),
+
+            CS.UniformFloatHyperparameter(
+                "coarse_dropout_size_percent",
+                lower=coarse_dropout_size_percent.lower,
+                default=coarse_dropout_size_percent.default,
+                upper=coarse_dropout_size_percent.upper,
+            ),
+            CS.UniformFloatHyperparameter(
+                "coarse_dropout",
+                lower=coarse_dropout.lower,
+                default=coarse_dropout.default,
+                upper=coarse_dropout.upper,
+            ),
         )
 
         config_space.add_hyperparameters(hyperparameters)
@@ -221,5 +252,3 @@ class ImageAugmentation(object):
                 aug_batch_x = normalize(aug_batch_x, mean, variance)
 
             yield aug_batch_x, batch_y
-
-
