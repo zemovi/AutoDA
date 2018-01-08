@@ -6,15 +6,11 @@ import os
 import argparse
 import json
 
-from os.path import join as path_join, dirname, realpath, abspath
+from os.path import join as path_join, abspath
 
 
 from keras.datasets import mnist, cifar10
-# from os.path import abspath, join as path_join
 sys.path.insert(0, abspath(path_join(__file__, "..", "..")))
-
-# PARENT_DIRECTORY = path_join(dirname(realpath(__file__)), "..", "..")
-# sys.path.insert(0, PARENT_DIRECTORY)
 
 from autoda.data_augmentation import ImageAugmentation
 from autoda.networks.train import objective_function
@@ -60,7 +56,7 @@ def main():
         sample_config = ImageAugmentation.get_config_space().sample_configuration()  # seed=123
 
     results = objective_function(
-        sample_config=sample_config, dataset=dataset, benchmark=benchmark, max_epochs=max_epochs,
+        configuration=sample_config, dataset=dataset, benchmark=benchmark, max_epochs=max_epochs,
         batch_size=batch_size
     )
 

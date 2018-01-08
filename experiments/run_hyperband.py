@@ -31,9 +31,6 @@ class ImageAugmentationWorker(Worker):
             The loss is just a the config + some noise (that decreases with the budget)
             There is a 10 percent failure probability for any run, just to demonstrate
             the robustness of Hyperband agains these kinds of failures.
-
-            For dramatization, the function sleeps for one second, which emphasizes
-            the speed ups achievable with parallel workers.
             """
 
             results = self.function(
@@ -71,7 +68,7 @@ HB = hpbandster.HB_master.HpBandSter(
     run_id='0',
     eta=2,
     min_budget=50,
-    max_budget=1800,      # HB parameters
+    max_budget=3600,      # HB parameters
     nameserver=nameserver,
     ns_port=ns_port,
     job_queue_sizes=(0, 1)
