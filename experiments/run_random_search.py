@@ -56,9 +56,6 @@ def main():
         sample_config = ImageAugmentation.get_config_space().sample_configuration()  # seed=123
 
 
-            results = self.function(
-                benchmark="AlexNet", configuration=config, dataset=self.dataset, max_epochs=100, batch_size=512, time_budget=budget
-            )
     results = objective_function(
         configuration=sample_config, dataset=dataset, benchmark=benchmark, max_epochs=max_epochs,
         batch_size=batch_size, time_budget=900
