@@ -119,3 +119,21 @@ def normalize(x, mean, std):
     x_normalized = (x - mean) / (std + 1e-7)
 
     return x_normalized
+
+
+def to_rgb(img):
+    """
+    Converts the given array into RGB image.
+    """
+
+    img = np.atleast_3d(img)
+    channels = img.shape[2]
+    if channels < 3:
+        img = np.tile(img, 3)
+
+    img[np.isnan(img)] = 0
+    img -= np.amin(img)
+    img /= np.amax(img)
+    img *= 255
+    return img
+
