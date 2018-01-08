@@ -30,12 +30,8 @@ def get_data(dataset, augment):
 
     # compute zero mean and unit variance for normalization
     mean, variance = compute_zero_mean_unit_variance(x_train)
-    # print("Mean and variance before split", mean, variance)
 
     x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.2)
-
-#    mean2, variance2 = compute_zero_mean_unit_variance(x_train)
-#    print("Mean and variance after split", mean2, variance2)
 
     if not augment:
         print("normalize training set beforehand if no data_augmentation")
@@ -54,7 +50,6 @@ def get_data(dataset, augment):
     y_valid = keras.utils.to_categorical(y_valid, num_classes)
     y_test = keras.utils.to_categorical(y_test, num_classes)
 
-    print("Y_train_after:", y_train.shape[1])
 
     return x_train, y_train, x_valid, y_valid, x_test, y_test, mean, variance
 

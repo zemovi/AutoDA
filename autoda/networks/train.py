@@ -127,6 +127,7 @@ def objective_function(configuration=None, dataset="Cifar10", benchmark="AlexNet
 
     # preprocess data
     x_train, y_train, x_validation, y_validation, x_test, y_test, data_mean, data_variance = get_data(dataset, augment)
+    print("VALIDATION", x_validation.shape, y_validation.shape)
 
     input_shape = get_input_shape(x_train)  # NWHC
 
