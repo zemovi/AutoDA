@@ -55,13 +55,12 @@ def main():
     if augment:
         sample_config = ImageAugmentation.get_config_space().sample_configuration()  # seed=123
 
-
     results = objective_function(
         configuration=sample_config, dataset=dataset, benchmark=benchmark, max_epochs=max_epochs,
         batch_size=batch_size, time_budget=900
     )
 
-    path = path_join(abspath("."), "AutoData/random_search", args.dataset)
+    path = path_join(abspath("."), "AutoData", args.dataset)
 
     with open(os.path.join(path, "random_search_{}_{}.json".format(args.dataset, int(args.run_id))), "w") as fh:
         json.dump(results, fh)
