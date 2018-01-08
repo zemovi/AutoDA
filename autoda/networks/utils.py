@@ -33,6 +33,10 @@ def get_data(dataset, augment):
 
     x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.2)
 
+    print("NO_LABELS:", y_train.shape[0])
+    y_train = y_train.reshape((y_train.shape[0]))
+    y_valid = y_valid.reshape((y_valid.shape[0]))
+
     if not augment:
         print("normalize training set beforehand if no data_augmentation")
         x_train = normalize(x_train, mean, variance)
@@ -40,16 +44,17 @@ def get_data(dataset, augment):
     x_test = normalize(x_test, mean, variance)
 
     # dimensions of data
-    print(x_train.shape, 'x_train Dimensions')
-    print(x_train.shape[0], 'train samples')
-    print(x_valid.shape[0], 'validation samples')
-    print(x_test.shape[0], 'test samples')
+#    print(x_train.shape, 'x_train Dimensions')
+#    print(x_train.shape[0], 'train samples')
+#    print(x_valid.shape[0], 'validation samples')
+#    print(x_test.shape[0], 'test samples')
 
     # Convert class vectors to binary class matrices.
     y_train = keras.utils.to_categorical(y_train, num_classes)
     y_valid = keras.utils.to_categorical(y_valid, num_classes)
     y_test = keras.utils.to_categorical(y_test, num_classes)
 
+    print("CLASES", num_classes, y_valid.shape, y_train.shape)
 
     return x_train, y_train, x_valid, y_valid, x_test, y_test, mean, variance
 
