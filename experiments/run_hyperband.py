@@ -92,7 +92,7 @@ best_config_trajectory = res.get_incumbent_trajectory()
 
 json_data = {
     "best_config_id": best_config_id,
-    "best_run": best_run,
+    "best_run_info": best_run.info,
     "best_config_trajectory": best_config_trajectory
 }
 
