@@ -2,10 +2,13 @@ import hpbandster
 import hpbandster.distributed.utils
 from hpbandster.distributed.worker import Worker
 
-import pickle
 import json
 import sys
 import os
+
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 from os.path import abspath, join as path_join
 sys.path.insert(0, abspath(path_join(__file__, "..", "..")))
 
@@ -13,8 +16,6 @@ from autoda.data_augmentation import ImageAugmentation
 from autoda.networks.train import objective_function
 from keras.datasets import cifar10
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
 
 # this run hyperband sequentially
 
@@ -68,7 +69,7 @@ HB = hpbandster.HB_master.HpBandSter(
     run_id='0',
     eta=2,
     min_budget=50,
-    max_budget=3600,      # HB parameters
+    max_budget=3600,
     nameserver=nameserver,
     ns_port=ns_port,
     job_queue_sizes=(0, 1)
@@ -80,20 +81,20 @@ res = HB.run(5, min_n_workers=1)
 HB.shutdown(shutdown_workers=True)
 
 
-print(res.get_incumbent_trajectory())
+# Save results
+path = path_join(abspath("."), "AutoData/hyperband")
+
+# Get important information about best configuration from HB result object
+best_config_id = res.get_incumbent_id()  # Config_id of the incumbent with smallest loss
+best_run = res.get_runs_by_id(best_config_id)[-1]
 best_config_trajectory = res.get_incumbent_trajectory()
 
 
-path = path_join(abspath("."), "AutoData/hyperband")
-
-with open(os.path.join(path, 'hyperband.pickle'), 'wb') as f:
-    # Pickle the 'res' object from hyperband to enable us to extract useful information
-    pickle.dump(res, f)
-
-
-print(res.get_incumbent_trajectory())
-best_config = res.get_incumbent_trajectory()
-
+json_data = {
+    "best_config_id": best_config_id,
+    "best_run": best_run,
+    "best_config_trajectory": best_config_trajectory
+}
 
 with open(os.path.join(path, "hyperband_result.json"), "w") as fh:
-        json.dump(best_config_trajectory, fh)
+        json.dump(json_data, fh)
