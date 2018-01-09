@@ -7,6 +7,9 @@ from autoda.networks.utils import normalize
 # from autoda.preprocessing import iterate_minibatches
 from imgaug import augmenters as iaa
 
+# XXX: Write documentation
+# XXX: implement drop out and Additive Gaussian noise, Elastic deformation
+
 
 class ImageAugmentation(object):
     """Data augmentation for image data.
@@ -27,24 +30,15 @@ class ImageAugmentation(object):
             self.config["augment_probability"],
             iaa.Sequential([
                 iaa.Sometimes(
-                    self.config["pad_probability"],
-                    iaa.Pad(
+                    self.config["pad_crop_probability"],
+                    iaa.CropAndPad(
                         percent=(
-                            self.config["pad_lower"],
-                            self.config["pad_upper"]
+                            self.config["pad_crop_lower"],
+                            self.config["pad_crop_upper"]
                         )
                     )
                 ),
 
-                iaa.Sometimes(
-                    self.config["crop_probability"],
-                    iaa.Crop(
-                        percent=(
-                            self.config["crop_lower"],
-                            self.config["crop_upper"]
-                        )
-                    )
-                ),
                 iaa.Flipud(self.config["vertical_flip"]),
                 iaa.Fliplr(self.config["horizontal_flip"]),
                 iaa.Sometimes(
@@ -85,20 +79,17 @@ class ImageAugmentation(object):
     def get_config_space(
 
             augment_probability=ParameterRange(lower=0, default=0.5, upper=1),
+            pad_crop_probability=ParameterRange(lower=0, default=0, upper=1),
+            pad_crop_lower=ParameterRange(lower=-0.125, default=0, upper=0),
+            pad_crop_upper=ParameterRange(lower=0, default=0, upper=0.125),
+            rotation_probability=ParameterRange(lower=0, default=0, upper=1),
             rotation_lower=ParameterRange(lower=-180, default=0, upper=0),
             rotation_upper=ParameterRange(lower=0, default=0, upper=180),
-            rotation_probability=ParameterRange(lower=0, default=0, upper=1),
+            scale_probability=ParameterRange(lower=0, default=0, upper=1),
             scale_lower=ParameterRange(lower=0.5, default=1., upper=1.),
             scale_upper=ParameterRange(lower=1., default=1., upper=2.),
-            scale_probability=ParameterRange(lower=0, default=0, upper=1),
             horizontal_flip=ParameterRange(lower=0, default=0, upper=1),
             vertical_flip=ParameterRange(lower=0, default=0, upper=1),
-            crop_lower=ParameterRange(lower=0, default=0, upper=0.1),
-            crop_upper=ParameterRange(lower=0.1, default=0.1, upper=0.3),
-            crop_probability=ParameterRange(lower=0, default=0, upper=1),
-            pad_lower=ParameterRange(lower=0, default=0, upper=0.1),
-            pad_upper=ParameterRange(lower=0.1, default=0.1, upper=0.3),
-            pad_probability=ParameterRange(lower=0, default=0, upper=1),
             coarse_dropout=ParameterRange(lower=0.0, default=0.01, upper=0.2),
             coarse_dropout_size_percent=ParameterRange(lower=0.01, default=0.01, upper=0.50),
             seed=None):
@@ -106,6 +97,40 @@ class ImageAugmentation(object):
         config_space = CS.ConfigurationSpace(seed)
 
         hyperparameters = (
+            CS.UniformFloatHyperparameter(
+                "augment_probability",
+                lower=augment_probability.lower,
+                default=augment_probability.default,
+                upper=augment_probability.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
+                "pad_crop_probability",
+                lower=pad_crop_probability.lower,
+                default=pad_crop_probability.default,
+                upper=pad_crop_probability.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
+                "pad_crop_lower",
+                lower=pad_crop_lower.lower,
+                default=pad_crop_lower.default,
+                upper=pad_crop_lower.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
+                "pad_crop_upper",
+                lower=pad_crop_upper.lower,
+                default=pad_crop_upper.default,
+                upper=pad_crop_upper.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
+                "rotation_probability",
+                lower=rotation_probability.lower,
+                default=rotation_probability.default,
+                upper=rotation_probability.upper,
+            ),
             CS.UniformIntegerHyperparameter(
                 "rotation_lower",
                 lower=rotation_lower.lower,
@@ -117,13 +142,6 @@ class ImageAugmentation(object):
                 lower=rotation_upper.lower,
                 default=rotation_upper.default,
                 upper=rotation_upper.upper,
-            ),
-
-            CS.UniformFloatHyperparameter(
-                "rotation_probability",
-                lower=rotation_probability.lower,
-                default=rotation_probability.default,
-                upper=rotation_probability.upper,
             ),
 
             CS.UniformFloatHyperparameter(
@@ -141,6 +159,13 @@ class ImageAugmentation(object):
             ),
 
             CS.UniformFloatHyperparameter(
+                "scale_probability",
+                lower=scale_probability.lower,
+                default=scale_probability.default,
+                upper=scale_probability.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
                 "scale_lower",
                 lower=scale_lower.lower,
                 default=scale_lower.default,
@@ -154,58 +179,10 @@ class ImageAugmentation(object):
             ),
 
             CS.UniformFloatHyperparameter(
-                "scale_probability",
-                lower=scale_probability.lower,
-                default=scale_probability.default,
-                upper=scale_probability.upper,
-            ),
-
-            CS.UniformFloatHyperparameter(
-                "crop_lower",
-                lower=crop_lower.lower,
-                default=crop_lower.default,
-                upper=crop_lower.upper,
-            ),
-
-            CS.UniformFloatHyperparameter(
-                "crop_upper",
-                lower=crop_upper.lower,
-                default=crop_upper.default,
-                upper=crop_upper.upper,
-            ),
-
-            CS.UniformFloatHyperparameter(
-                "crop_probability",
-                lower=crop_probability.lower,
-                default=crop_probability.default,
-                upper=crop_probability.upper,
-            ),
-
-            CS.UniformFloatHyperparameter(
-                "pad_lower",
-                lower=pad_lower.lower,
-                default=pad_lower.default,
-                upper=pad_lower.upper,
-            ),
-
-            CS.UniformFloatHyperparameter(
-                "pad_upper",
-                lower=pad_upper.lower,
-                default=pad_upper.default,
-                upper=pad_upper.upper,
-            ),
-
-            CS.UniformFloatHyperparameter(
-                "pad_probability",
-                lower=pad_probability.lower,
-                default=pad_probability.default,
-                upper=pad_probability.upper,
-            ),
-            CS.UniformFloatHyperparameter(
-                "augment_probability",
-                lower=augment_probability.lower,
-                default=augment_probability.default,
-                upper=augment_probability.upper,
+                "coarse_dropout",
+                lower=coarse_dropout.lower,
+                default=coarse_dropout.default,
+                upper=coarse_dropout.upper,
             ),
 
             CS.UniformFloatHyperparameter(
@@ -213,12 +190,6 @@ class ImageAugmentation(object):
                 lower=coarse_dropout_size_percent.lower,
                 default=coarse_dropout_size_percent.default,
                 upper=coarse_dropout_size_percent.upper,
-            ),
-            CS.UniformFloatHyperparameter(
-                "coarse_dropout",
-                lower=coarse_dropout.lower,
-                default=coarse_dropout.default,
-                upper=coarse_dropout.upper,
             ),
         )
 
