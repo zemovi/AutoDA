@@ -14,12 +14,13 @@ def alexnet(input_shape, num_classes,
     # AlexNet
 
     model = Sequential()
-    model.add(Conv2D(32, (3, 3), padding='same',
-                     input_shape=input_shape))
 
+    model.add(Conv2D(140, (5, 5), padding='same',
+                     input_shape=input_shape))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(3, 3), strides=2))
+
     model.add(Conv2D(94, (5, 5)))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
@@ -34,7 +35,6 @@ def alexnet(input_shape, num_classes,
     model.add(Dense(num_classes))
     model.add(Activation('softmax'))
 
-   #  model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
     return model
 
