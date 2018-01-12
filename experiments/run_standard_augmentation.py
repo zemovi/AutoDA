@@ -63,6 +63,15 @@ def main():
         sample_config['pad_crop_lower'] = -0.125
         sample_config['pad_crop_upper'] = 0.125
         sample_config['horizontal_flip'] = 0.5
+        sample_config['pad_crop_probability'] = 1.0
+        # set other augmeters off
+        sample_config['scale_probability'] = 0.
+        sample_config['rotation_probability'] = 0.
+        sample_config['vertical_flip'] = 0.
+        sample_config['coarse_dropout_probability'] = 0.
+        sample_config['elastic_transform_probability'] = 0.
+        sample_config['gaussian_noise_probability'] = 0.
+        sample_config["shear_probability"] = 0.
 
         results = objective_function(
             configuration=sample_config, data=data, benchmark=benchmark, max_epochs=max_epochs,
