@@ -97,12 +97,12 @@ def objective_function(data, configuration=None, benchmark="AlexNet", max_epochs
         "validation_loss": validation_loss,
         "validation_error": 1 - validation_accuracy,
         "used_budget": used_budget,
-        # "train_history": train_history,
+        "train_history": train_history,
         "configs": configuration
     }
 
     if configuration:
-        result["configs"] = configuration
+        result["configs"] = configuration.get_dictionary()
     else:
         result["configs"] = {}
 
