@@ -123,13 +123,10 @@ path = path_join(abspath("."), "AutoData/hyperband")
 pickle.dump(res, open("hyperband.pkl", "wb"))
 
 
-result = pickle.load(open("hyperband.pkl", "rb"))
-
-
 # Get important information about best configuration from HB result object
-best_config_id = result.get_incumbent_id()  # Config_id of the incumbent with smallest loss
-best_run = result.get_runs_by_id(best_config_id)[-1]
-best_config_trajectory = result.get_incumbent_trajectory()
+best_config_id = res.get_incumbent_id()  # Config_id of the incumbent with smallest loss
+best_run = res.get_runs_by_id(best_config_id)[-1]
+best_config_trajectory = res.get_incumbent_trajectory()
 
 
 json_data = {
