@@ -1,3 +1,5 @@
+
+from keras.datasets import mnist, cifar10
 import hpbandster
 import hpbandster.distributed.utils
 from hpbandster.distributed.worker import Worker
@@ -5,6 +7,8 @@ from hpbandster.distributed.worker import Worker
 import json
 import sys
 import os
+import argparse
+import pickle
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -12,17 +16,51 @@ logging.basicConfig(level=logging.DEBUG)
 from os.path import abspath, join as path_join
 sys.path.insert(0, abspath(path_join(__file__, "..", "..")))
 
+from autoda.networks.utils import get_data
 from autoda.data_augmentation import ImageAugmentation
 from autoda.networks.train import objective_function
-from keras.datasets import cifar10
+
+# command line arguement parser
+parser = argparse.ArgumentParser(description='Simple python script to run experiments on augmented data using random search')
+
+parser.add_argument(
+    "--benchmark", help="Neural network to be trained with augmented data"
+)
+parser.add_argument(
+    "--max_epochs", default=500, help="Maximum number of epochs to train network", type=int
+)
+parser.add_argument(
+    "--batch_size", default=128, help="Size of a mini batch", type=int
+)
+parser.add_argument(
+    "--augment", action="store_true", help="If the data should be augmented, if flag not set defaults to false"
+)
+parser.add_argument(
+    "--dataset", help="Dataset to train neural network on"
+)
+parser.add_argument(
+    "--run_id", help="The id of single job"
+)
+
+args = parser.parse_args()
+
+benchmark = args.benchmark
+
+dataset = {
+    "mnist": mnist,
+    "cifar10": cifar10
+}[args.dataset]
+
+max_epochs, batch_size, augment = int(args.max_epochs), int(args.batch_size), args.augment
+
+data = get_data(dataset, augment)
 
 
 # this run hyperband sequentially
 
-
 class ImageAugmentationWorker(Worker):
-        def __init__(self, benchmark=(objective_function, cifar10), *args, **kwargs):
-            self.function, self.dataset = benchmark
+        def __init__(self, benchmark=(objective_function, data), *args, **kwargs):
+            self.function, self.data = benchmark
             super().__init__(*args, **kwargs)
 
         def compute(self, config, budget, *args, **kwargs):
@@ -33,9 +71,8 @@ class ImageAugmentationWorker(Worker):
             There is a 10 percent failure probability for any run, just to demonstrate
             the robustness of Hyperband agains these kinds of failures.
             """
-
             results = self.function(
-                benchmark="AlexNet", configuration=config, dataset=self.dataset, max_epochs=100, batch_size=512, time_budget=budget
+                benchmark=benchmark, configuration=config, data=data, max_epochs=max_epochs, batch_size=batch_size, time_budget=budget
             )
 
             validation_error = results["validation_error"]
@@ -69,7 +106,7 @@ HB = hpbandster.HB_master.HpBandSter(
     run_id='0',
     eta=2,
     min_budget=50,
-    max_budget=3600,
+    max_budget=7200,
     nameserver=nameserver,
     ns_port=ns_port,
     job_queue_sizes=(0, 1)
@@ -80,14 +117,19 @@ res = HB.run(5, min_n_workers=1)
 # shutdown the worker and the dispatcher
 HB.shutdown(shutdown_workers=True)
 
-
 # Save results
 path = path_join(abspath("."), "AutoData/hyperband")
 
+pickle.dump(res, open("hyperband.pkl", "wb"))
+
+
+result = pickle.load(open("hyperband.pkl", "rb"))
+
+
 # Get important information about best configuration from HB result object
-best_config_id = res.get_incumbent_id()  # Config_id of the incumbent with smallest loss
-best_run = res.get_runs_by_id(best_config_id)[-1]
-best_config_trajectory = res.get_incumbent_trajectory()
+best_config_id = result.get_incumbent_id()  # Config_id of the incumbent with smallest loss
+best_run = result.get_runs_by_id(best_config_id)[-1]
+best_config_trajectory = result.get_incumbent_trajectory()
 
 
 json_data = {

@@ -15,7 +15,7 @@ def enforce_image_format(image_format):
 
 
 @enforce_image_format("channels_last")
-def get_data(dataset, augment):
+def get_data(dataset, augment=True):
 
     # The data, shuffled and split between train and test sets:
     (x_train, y_train), (x_test, y_test) = dataset.load_data()
@@ -33,7 +33,6 @@ def get_data(dataset, augment):
 
     x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.2)
 
-    print("NO_LABELS:", y_train.shape[0])
     y_train = y_train.reshape((y_train.shape[0]))
     y_valid = y_valid.reshape((y_valid.shape[0]))
 
@@ -44,19 +43,19 @@ def get_data(dataset, augment):
     x_test = normalize(x_test, mean, variance)
 
     # dimensions of data
-#    print(x_train.shape, 'x_train Dimensions')
-#    print(x_train.shape[0], 'train samples')
-#    print(x_valid.shape[0], 'validation samples')
-#    print(x_test.shape[0], 'test samples')
+    print(x_train.shape, 'x_train Dimensions')
+    print(x_train.shape[0], 'train samples')
+    print(x_valid.shape[0], 'validation samples')
+    print(x_test.shape[0], 'test samples')
 
     # Convert class vectors to binary class matrices.
     y_train = keras.utils.to_categorical(y_train, num_classes)
     y_valid = keras.utils.to_categorical(y_valid, num_classes)
     y_test = keras.utils.to_categorical(y_test, num_classes)
 
-    print("CLASES", num_classes, y_valid.shape, y_train.shape)
+    data = x_train, y_train, x_valid, y_valid, x_test, y_test, mean, variance
 
-    return x_train, y_train, x_valid, y_valid, x_test, y_test, mean, variance
+    return data
 
 
 def _merge_dict(dict_list):
@@ -91,7 +90,6 @@ def get_num_classes(y_train):
 
 
 def get_input_shape(x_train):
-    print(x_train.shape)
     _, *shape = x_train.shape
     return shape
 
@@ -136,4 +134,3 @@ def to_rgb(img):
     img /= np.amax(img)
     img *= 255
     return img
-

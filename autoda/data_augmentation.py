@@ -4,21 +4,71 @@
 import ConfigSpace as CS
 from autoda.generate_batches import generate_batches
 from autoda.networks.utils import normalize
-# from autoda.preprocessing import iterate_minibatches
 from imgaug import augmenters as iaa
 
-# XXX: Write documentation
-# XXX: implement drop out and Additive Gaussian noise, Elastic deformation
+
+"""
+List of Augmentation considered:
+    * PadAndCrop
+    * Vertical Flip
+    * Horizontal Flip
+    * Rotation
+    * Scale
+    * Dropout
+    * CoarseDropout
+    * AdditiveGaussianNoise
+    * ElasticTransformation
+    * Shear
+
+"""
 
 
 class ImageAugmentation(object):
-    """Data augmentation for image data.
+    """
+    Creates a configuration space for hyperparameter optimization of
+    a data augmentation sequence.
 
     Parameters
     ----------
+    config:
+        : augment_probability : apply whole augmentation sequence to images with augment_probability
+
+        * PadAndCrop
+        - pad_crop_probability :  apply padding and cropping to images with pad_crop_probability
+        - pad_crop_lower :
+        - pad_crop_upper :
+
+        * Rotation
+            - rotation_probability
+            - rotation_lower
+            - rotation_upper
+
+        * Scale
+            - scale_probability
+            - scale_lower
+            - scale_upper
+        *  horizontal_flip : flip horizontally images with given probability
+        *  vertical_flip : flip vertically images with given probability
+        * CoarseDropout : Drop p% of all pixels by converting them to black pixels,
+                          on a lower-resolution version of the image
+            - coarse_dropout_size_percent : of the original size, leading to pxp squares being dropped
+
+            - coarse_dropout_per_channel : Drop pixels independently per channel.
+
+        * AdditiveGaussianNoise: Add white noise to images sampled per pixel from a normal distribution N(0,std).
+            - gaussian_noise_scale : specifies the range the std of normal distribution is sampled from.
+
+        * ElasticTransformation: Distort images locally by moving individual pixels around
+            - elastic_transform_alpha : The strength of the movement is sampled per pixel from alpha
+            - elastic_transform_sigma : Strength of distortions field
+    seq :
 
     Examples
     -------
+    >>> aug = iaa.AdditiveGaussianNoise(scale=0.1*255)
+    adds gaussian noise from the distribution N(0, 0.1*255) to images
+    >>> aug = iaa.CropAndPad(percent(-0.1, 0.1))
+
 
     """
 
@@ -50,6 +100,16 @@ class ImageAugmentation(object):
                         )
                     )
                 ),
+
+                iaa.Sometimes(
+                    self.config["shear_probability"],
+                    iaa.Affine(
+                        rotate=(
+                            self.config["shear_lower"],
+                            self.config["shear_upper"]
+                        )
+                    )
+                ),
                 iaa.Sometimes(
                     self.config["scale_probability"],
                     iaa.Affine(
@@ -59,14 +119,48 @@ class ImageAugmentation(object):
                     )
                 ),
 
-                iaa.CoarseDropout(
-                    p=(
-                        self.config["coarse_dropout"]  # probability that a pixel is dropped
-                    ),
-                    size_percent=(
-                        self.config["coarse_dropout_size_percent"]
+
+                iaa.Sometimes(
+                    self.config["coarse_dropout_probability"],
+                    iaa.CoarseDropout(
+                        p=(
+                            self.config["coarse_dropout_lower"],
+                            self.config["coarse_dropout_upper"]
+                        ),
+                        size_percent=(
+                            self.config["coarse_dropout_size_percent_lower"],
+                            self.config["coarse_dropout_size_percent_upper"]
+                        ),
+
+                        per_channel=(
+                            self.config["coarse_dropout_per_channel"]
+                        )
                     )
-                )
+                ),
+
+                iaa.Sometimes(
+                    self.config["gaussian_noise_probability"],
+                    iaa.AdditiveGaussianNoise(
+                        scale=(
+                            self.config["gaussian_noise_scale_lower"],
+                            self.config["gaussian_noise_scale_upper"]
+                        ),
+                    )
+                ),
+
+                iaa.Sometimes(
+                    self.config["elastic_transform_probability"],
+                    iaa.ElasticTransformation(
+                        alpha=(
+                            self.config["elastic_transform_alpha_lower"],
+                            self.config["elastic_transform_alpha_upper"]
+                        ),
+
+                        sigma=(
+                            self.config["elastic_transform_sigma"]
+                        ),
+                    )
+                ),
 
             ], random_order=False
             )
@@ -77,7 +171,6 @@ class ImageAugmentation(object):
 
     @staticmethod
     def get_config_space(
-
             augment_probability=ParameterRange(lower=0, default=0.5, upper=1),
             pad_crop_probability=ParameterRange(lower=0, default=0, upper=1),
             pad_crop_lower=ParameterRange(lower=-0.125, default=0, upper=0),
@@ -85,13 +178,27 @@ class ImageAugmentation(object):
             rotation_probability=ParameterRange(lower=0, default=0, upper=1),
             rotation_lower=ParameterRange(lower=-180, default=0, upper=0),
             rotation_upper=ParameterRange(lower=0, default=0, upper=180),
+            shear_probability=ParameterRange(lower=0, default=0, upper=1),
+            shear_lower=ParameterRange(lower=-16, default=0, upper=0),
+            shear_upper=ParameterRange(lower=0, default=0, upper=16),
             scale_probability=ParameterRange(lower=0, default=0, upper=1),
             scale_lower=ParameterRange(lower=0.5, default=1., upper=1.),
             scale_upper=ParameterRange(lower=1., default=1., upper=2.),
             horizontal_flip=ParameterRange(lower=0, default=0, upper=1),
             vertical_flip=ParameterRange(lower=0, default=0, upper=1),
-            coarse_dropout=ParameterRange(lower=0.0, default=0.01, upper=0.2),
-            coarse_dropout_size_percent=ParameterRange(lower=0.01, default=0.01, upper=0.50),
+            coarse_dropout_probability=ParameterRange(lower=0, default=0.5, upper=1),
+            coarse_dropout_lower=ParameterRange(lower=0.0, default=0.01, upper=0.1),
+            coarse_dropout_upper=ParameterRange(lower=0.1, default=0.1, upper=0.2),
+            coarse_dropout_size_percent_lower=ParameterRange(lower=0.01, default=0.01, upper=0.10),
+            coarse_dropout_size_percent_upper=ParameterRange(lower=0.1, default=0.1, upper=0.2),
+            coarse_dropout_per_channel=ParameterRange(lower=0.0, default=0.1, upper=1.0),
+            gaussian_noise_probability=ParameterRange(lower=0, default=0.5, upper=1),
+            gaussian_noise_scale_lower=ParameterRange(lower=0.0, default=0.01 * 255, upper=0.05 * 255),
+            gaussian_noise_scale_upper=ParameterRange(lower=0.05, default=0.06 * 255, upper=0.10 * 255),
+            elastic_transform_probability=ParameterRange(lower=0, default=0.5, upper=1),
+            elastic_transform_alpha_lower=ParameterRange(lower=0.0, default=0.01, upper=2.0),
+            elastic_transform_alpha_upper=ParameterRange(lower=2.1, default=2.5, upper=5.0),
+            elastic_transform_sigma=ParameterRange(lower=0.0, default=0.25, upper=1.0),
             seed=None):
 
         config_space = CS.ConfigurationSpace(seed)
@@ -145,6 +252,25 @@ class ImageAugmentation(object):
             ),
 
             CS.UniformFloatHyperparameter(
+                "shear_probability",
+                lower=shear_probability.lower,
+                default=shear_probability.default,
+                upper=shear_probability.upper,
+            ),
+            CS.UniformIntegerHyperparameter(
+                "shear_lower",
+                lower=shear_lower.lower,
+                default=shear_lower.default,
+                upper=shear_lower.upper,
+            ),
+            CS.UniformIntegerHyperparameter(
+                "shear_upper",
+                lower=shear_upper.lower,
+                default=shear_upper.default,
+                upper=shear_upper.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
                 'horizontal_flip',
                 lower=horizontal_flip.lower,
                 default=horizontal_flip.default,
@@ -179,18 +305,95 @@ class ImageAugmentation(object):
             ),
 
             CS.UniformFloatHyperparameter(
-                "coarse_dropout",
-                lower=coarse_dropout.lower,
-                default=coarse_dropout.default,
-                upper=coarse_dropout.upper,
+                "coarse_dropout_probability",
+                lower=coarse_dropout_probability.lower,
+                default=coarse_dropout_probability.default,
+                upper=coarse_dropout_probability.upper,
             ),
 
             CS.UniformFloatHyperparameter(
-                "coarse_dropout_size_percent",
-                lower=coarse_dropout_size_percent.lower,
-                default=coarse_dropout_size_percent.default,
-                upper=coarse_dropout_size_percent.upper,
+                "coarse_dropout_lower",
+                lower=coarse_dropout_lower.lower,
+                default=coarse_dropout_lower.default,
+                upper=coarse_dropout_lower.upper,
             ),
+
+            CS.UniformFloatHyperparameter(
+                "coarse_dropout_upper",
+                lower=coarse_dropout_upper.lower,
+                default=coarse_dropout_upper.default,
+                upper=coarse_dropout_upper.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
+                "coarse_dropout_size_percent_lower",
+                lower=coarse_dropout_size_percent_lower.lower,
+                default=coarse_dropout_size_percent_lower.default,
+                upper=coarse_dropout_size_percent_lower.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
+                "coarse_dropout_size_percent_upper",
+                lower=coarse_dropout_size_percent_upper.lower,
+                default=coarse_dropout_size_percent_upper.default,
+                upper=coarse_dropout_size_percent_upper.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
+                "coarse_dropout_per_channel",
+                lower=coarse_dropout_per_channel.lower,
+                default=coarse_dropout_per_channel.default,
+                upper=coarse_dropout_per_channel.upper,
+            ),
+
+
+            CS.UniformFloatHyperparameter(
+                "gaussian_noise_probability",
+                lower=gaussian_noise_probability.lower,
+                default=gaussian_noise_probability.default,
+                upper=gaussian_noise_probability.upper,
+            ),
+            CS.UniformFloatHyperparameter(
+                "gaussian_noise_scale_lower",
+                lower=gaussian_noise_scale_lower.lower,
+                default=gaussian_noise_scale_lower.default,
+                upper=gaussian_noise_scale_lower.upper,
+            ),
+            CS.UniformFloatHyperparameter(
+                "gaussian_noise_scale_upper",
+                lower=gaussian_noise_scale_upper.lower,
+                default=gaussian_noise_scale_upper.default,
+                upper=gaussian_noise_scale_upper.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
+                "elastic_transform_probability",
+                lower=elastic_transform_probability.lower,
+                default=elastic_transform_probability.default,
+                upper=elastic_transform_probability.upper,
+            ),
+            CS.UniformFloatHyperparameter(
+                "elastic_transform_alpha_lower",
+                lower=elastic_transform_alpha_lower.lower,
+                default=elastic_transform_alpha_lower.default,
+                upper=elastic_transform_alpha_lower.upper,
+            ),
+
+            CS.UniformFloatHyperparameter(
+                "elastic_transform_alpha_upper",
+                lower=elastic_transform_alpha_upper.lower,
+                default=elastic_transform_alpha_upper.default,
+                upper=elastic_transform_alpha_upper.upper,
+            ),
+
+
+            CS.UniformFloatHyperparameter(
+                "elastic_transform_sigma",
+                lower=elastic_transform_sigma.lower,
+                default=elastic_transform_sigma.default,
+                upper=elastic_transform_sigma.upper,
+            ),
+
         )
 
         config_space.add_hyperparameters(hyperparameters)
@@ -214,7 +417,6 @@ class ImageAugmentation(object):
                      Batches of augmented images
         """
 
-        # for batch_x, batch_y in iterate_minibatches(inputs=x_train, targets=y_train, batchsize=batch_size):
         for batch_x, batch_y in generate_batches(x_train, y_train, batch_size=batch_size):
 
             aug_batch_x = self.seq.augment_images(batch_x)
