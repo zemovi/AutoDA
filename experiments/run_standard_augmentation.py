@@ -14,7 +14,9 @@ sys.path.insert(0, abspath(path_join(__file__, "..", "..")))
 
 from autoda.networks.utils import get_data
 from autoda.data_augmentation import ImageAugmentation
+
 from autoda.networks.train import objective_function
+from autoda.networks.train_standard import standard_objective_function
 
 
 def main():
@@ -52,22 +54,33 @@ def main():
     max_epochs, batch_size, augment = int(args.max_epochs), int(args.batch_size), args.augment
 
     sample_config = None
+
     data = get_data(dataset, augment)
 
     if augment:
         sample_config = ImageAugmentation.get_config_space().sample_configuration()  # seed=123
+        sample_config['augment_probability'] = 1.0
+        sample_config['pad_crop_lower'] = -0.125
+        sample_config['pad_crop_upper'] = 0.125
+        sample_config['horizontal_flip'] = 0.5
 
-    results = objective_function(
-        configuration=sample_config, data=data, benchmark=benchmark, max_epochs=max_epochs,
-        batch_size=batch_size, time_budget=1800
-    )
+        results = objective_function(
+            configuration=sample_config, data=data, benchmark=benchmark, max_epochs=max_epochs,
+            batch_size=batch_size, time_budget=1800
+        )
+    else:
 
+        results = standard_objective_function(
+            data=data, benchmark=benchmark, max_epochs=max_epochs,
+            batch_size=batch_size, time_budget=1800
+        )
 
     path = path_join(abspath("."), "AutoData", args.dataset)
 
-    with open(os.path.join(path, "random_search_{}_{}.json".format(args.dataset, int(args.run_id))), "w") as fh:
+    with open(os.path.join(path, "standard_augment_{}_{}.json".format(args.dataset, int(args.run_id))), "w") as fh:
         json.dump(results, fh)
 
 
 if __name__ == "__main__":
     main()
+

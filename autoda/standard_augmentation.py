@@ -119,7 +119,7 @@ def crop(batch, crop_width=32, crop_height=32, n_crops=1):
     return np.asarray(cropped_images)
 
 
-def apply_standard_transform(x_train, y_train, mean=None, variance=None, batch_size=1):
+def apply_transform(x_train, y_train, mean=None, variance=None, batch_size=1):
     """  Applies image augmentation on given training samples
 
     Parameters
@@ -146,11 +146,10 @@ def apply_standard_transform(x_train, y_train, mean=None, variance=None, batch_s
             # do not crop or pad if pad_width == 0 and pad_height == 0
             cropped_batch = batch_x
 
-        print("first", cropped_batch.shape)
         default_seq = iaa.Sequential([iaa.Fliplr(0.5)], random_order=False)
 
-        cropped_batch = np.rollaxis(cropped_batch, 1, 4)
-        print("last", cropped_batch.shape)
+        # cropped_batch = np.rollaxis(cropped_batch, 1, 4)
+        # mean = np.rollaxis(mean, 2)
         aug_batch_x = default_seq.augment_images(cropped_batch)
 
         if mean is not None and variance is not None:
