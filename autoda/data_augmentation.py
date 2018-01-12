@@ -173,8 +173,8 @@ class ImageAugmentation(object):
     def get_config_space(
             augment_probability=ParameterRange(lower=0, default=0.5, upper=1),
             pad_crop_probability=ParameterRange(lower=0, default=0, upper=1),
-            pad_crop_lower=ParameterRange(lower=-0.125, default=0, upper=0),
-            pad_crop_upper=ParameterRange(lower=0, default=0, upper=0.125),
+            pad_crop_lower=ParameterRange(lower=-0.25, default=0, upper=0),
+            pad_crop_upper=ParameterRange(lower=0.1, default=0, upper=0.25),
             rotation_probability=ParameterRange(lower=0, default=0, upper=1),
             rotation_lower=ParameterRange(lower=-180, default=0, upper=0),
             rotation_upper=ParameterRange(lower=0, default=0, upper=180),
