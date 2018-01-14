@@ -102,7 +102,7 @@ def objective_function(data, configuration=None, benchmark="AlexNet", max_epochs
     }
 
     if configuration:
-        result["configs"] = configuration.get_dictionary()
+        result["configs"] = configuration
     else:
         result["configs"] = {}
 
