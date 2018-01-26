@@ -61,6 +61,10 @@ def lenet(input_shape, num_classes,
 
     return model
 
+def wideresnet():
+    raise NotImplementedError()
+
+
 
 ARCHITECTURES = {
     "AlexNet": alexnet,
