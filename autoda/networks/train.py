@@ -113,8 +113,8 @@ def objective_function(data, configuration=None, benchmark="AlexNet", max_epochs
         "configs": config
     }
 
-    if config:
-        result["configs"] = config
+    if configuration:
+        result["configs"] = configuration
     else:
         result["configs"] = {}
 
