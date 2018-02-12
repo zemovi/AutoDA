@@ -2,12 +2,6 @@ import ConfigSpace as CS
 import time
 import keras
 
-# from keras.models import Sequential
-# from keras.layers import (
-#     Activation, Conv2D, Dense,
-#     Dropout, BatchNormalization, Flatten,
-#     MaxPooling2D
-# )
 import keras.backend.tensorflow_backend as K
 
 from autoda.data_augmentation import ImageAugmentation
@@ -17,6 +11,7 @@ from autoda.networks.utils import (
 )
 from autoda.networks.architectures import ARCHITECTURES
 
+ #XXX: remove unnecessary comments.
 
 def objective_function(data, configuration=None, benchmark="AlexNet", max_epochs=40, batch_size=512, time_budget=900):
 
@@ -39,7 +34,6 @@ def objective_function(data, configuration=None, benchmark="AlexNet", max_epochs
     K.set_session(session)
 
     assert benchmark in ARCHITECTURES
-    # AlexNet
     network_function = ARCHITECTURES[benchmark]
     model = network_function(num_classes=num_classes, input_shape=input_shape)
 
@@ -47,7 +41,6 @@ def objective_function(data, configuration=None, benchmark="AlexNet", max_epochs
         with session.graph.as_default():
             opt = keras.optimizers.Adam(lr=0.0016681005372000575)
 
-            # Let's train the model using RMSprop
             model.compile(loss='categorical_crossentropy',
                           optimizer=opt,
                           metrics=['accuracy'])
@@ -110,7 +103,8 @@ def objective_function(data, configuration=None, benchmark="AlexNet", max_epochs
         "validation_error": 1 - validation_accuracy,
         "used_budget": used_budget,
         "train_history": train_history,
-        "configs": config
+        "configs": config,
+        "epochs": max_epochs
     }
 
     if configuration:
