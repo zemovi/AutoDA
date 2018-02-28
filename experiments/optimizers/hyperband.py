@@ -31,10 +31,10 @@ class ImageAugmentationWorker(Worker):
 
     def compute(self, config, budget, *args, **kwargs):
 
-        if self.pipeline == "default":
+        if self.pipeline == "standard":
             # XXX: move this to its own function
             # XXX: check out if config space can be called with default values(get_config_space().get_default_value)
-            print("USING DEFAULT CONFIGURATION")
+            print("USING STANDARD AUGMENTATION")
             config['scale_probability'] = 0.
             config['rotation_probability'] = 0.
             config['rotation_lower'] = 0
@@ -89,6 +89,7 @@ def run_hpbandster(model_based, pipeline, config_space, time_budget, benchmark, 
         CG = hpbandster.config_generators.RandomSampling(config_space)  # hyperband on steriods
 
 
+# XXX: change min_budget to 500
     # instantiating Hyperband with some minimal configuration
     HB = hpbandster.HB_master.HpBandSter(
         config_generator=CG,

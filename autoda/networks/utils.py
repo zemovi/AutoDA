@@ -13,7 +13,9 @@ def enforce_image_format(image_format):
         return function
     return decorator
 
-
+#FIXME: find a way to remove argument augment
+# move out normalization out of of get_data
+# remove dependency to scikit learn because of just train_test_split
 @enforce_image_format("channels_last")
 def get_data(dataset, augment=True):
 

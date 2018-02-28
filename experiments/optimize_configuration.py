@@ -18,8 +18,8 @@ sys.path.insert(0, abspath(path_join(__file__, "..", "..")))
 from autoda.networks.utils import get_data
 from autoda.data_augmentation import ImageAugmentation
 from autoda.networks.train import objective_function
-from experiments.hyperband.hpbandster2 import run_hpbandster
-from experiments.smac.smac import run_smac
+from experiments.optimizers.hyperband import run_hpbandster
+from experiments.optimizers.smac import run_smac
 
 
 def to_json(output_file, best_configuration, dataset, run_id):
@@ -66,7 +66,7 @@ def benchmark_hpbandster(args):
 
     # Config_id of the incumbent with smallest loss
     id_ = best_configuration.get_incumbent_id()
-    run_info = best_configuration.get_runs_by_id(best_config_id)[-1]
+    run_info = best_configuration.get_runs_by_id(id_)[-1]
     trajectory = best_configuration.get_incumbent_trajectory()
 
     return to_json(
@@ -107,9 +107,8 @@ def main():
 
     parser.add_argument(
         "--pipeline",
-        default="default",
         dest="pipeline",
-        help="Data augmentation pipeline to use"
+        help="Data augmentation pipeline to use, choice:{standard, pipeline1, pipeline2}"
     )
 
     parser.add_argument(
@@ -125,6 +124,7 @@ def main():
         type=int,
         help="Size of a mini batch",
     )
+    # XXX: Remove augment if possible, augmentation is assumed if to optimize
     parser.add_argument(
         "--augment", action="store_true", help="If the data should be augmented, if flag not set defaults to false"
     )
@@ -156,7 +156,7 @@ def main():
     default_outputfile = path_join(
         abspath("."), "AutoData",
         args.dataset,
-        "hpbandster/best_config_{optimizer}_{dataset}_{run_id}.json".format(
+        "hyperband/best_config_{optimizer}_{dataset}_{run_id}.json".format(
             optimizer=args.optimizer, dataset=args.dataset, run_id=int(args.run_id)
         )
     )
