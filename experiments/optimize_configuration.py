@@ -146,6 +146,7 @@ def main():
     )
 
     args = parser.parse_args()
+    print("output", args.output_file)
 
     optimizer_name = args.optimizer
 
@@ -161,7 +162,9 @@ def main():
         )
     )
 
-    args.output_file = args.output_file or default_outputfile
+    if args.output_file is None:
+        args.output_file = default_output_file
+
 
     configuration = None
 
@@ -174,7 +177,7 @@ def main():
     args.config_space = ImageAugmentation.get_config_space()
     args.data = get_data(dataset, args.augment)
 
-    args.func(args)
+    # args.func(args)
 
 
 if __name__ == "__main__":
