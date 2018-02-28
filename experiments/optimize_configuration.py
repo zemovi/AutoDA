@@ -45,7 +45,7 @@ def benchmark_smac(args):
             )
 
     return to_json(
-        output_file=args.output_file,
+        output_file=default_output_file,
         best_configuration=(id_, run_info, trajectory),
         dataset=args.dataset,
         run_id=args.run_id,
@@ -70,7 +70,7 @@ def benchmark_hpbandster(args):
     trajectory = best_configuration.get_incumbent_trajectory()
 
     return to_json(
-        output_file=args.output_file,
+        output_file=default_output_file,
         best_configuration=(id_, run_info, trajectory),
         dataset=args.dataset,
         run_id=args.run_id,
@@ -153,7 +153,7 @@ def main():
         if args.model_based:
             optimizer_name = "BOHB"
 
-    default_outputfile = path_join(
+    default_output_file = path_join(
         abspath("."), "AutoData",
         args.dataset,
         "hyperband/best_config_{optimizer}_{dataset}_{run_id}.json".format(
