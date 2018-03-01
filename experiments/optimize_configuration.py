@@ -45,7 +45,7 @@ def benchmark_smac(args):
             )
 
     return to_json(
-        output_file=default_output_file,
+        output_file=args.output_file,
         best_configuration=(id_, run_info, trajectory),
         dataset=args.dataset,
         run_id=args.run_id,
@@ -70,7 +70,7 @@ def benchmark_hpbandster(args):
     trajectory = best_configuration.get_incumbent_trajectory()
 
     return to_json(
-        output_file=default_output_file,
+        output_file=args.output_file,
         best_configuration=(id_, run_info, trajectory),
         dataset=args.dataset,
         run_id=args.run_id,
@@ -146,7 +146,6 @@ def main():
     )
 
     args = parser.parse_args()
-    print("output", args.output_file)
 
     optimizer_name = args.optimizer
 
@@ -162,13 +161,10 @@ def main():
         )
     )
 
-    if args.output_file is None:
-        args.output_file = default_output_file
+    args.output_file = args.output_file or default_output_file
 
 
     configuration = None
-
-    args = parser.parse_args()
 
     dataset = {"mnist": mnist, "cifar10": cifar10, "cifar100": cifar100}[args.dataset]
 
@@ -177,7 +173,7 @@ def main():
     args.config_space = ImageAugmentation.get_config_space()
     args.data = get_data(dataset, args.augment)
 
-    # args.func(args)
+    args.func(args)
 
 
 if __name__ == "__main__":
