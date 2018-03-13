@@ -65,7 +65,7 @@ def objective_function(data, configuration=None, benchmark="AlexNet", max_epochs
                     callbacks = []
 
                     #factor=0.31622776601683794,
-                    if benchmark == "WResNet":
+                    if benchmark == "ResNet":
 #                        lr_reducer = ReduceLROnPlateau(
 #                            cooldown=0, patience=5, min_lr=0.5e-6
 #                        )
