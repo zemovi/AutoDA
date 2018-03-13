@@ -63,7 +63,7 @@ class ImageAugmentationWorker(Worker):
         })
 
 
-def run_hpbandster(model_based, pipeline, config_space, time_budget, benchmark, data, max_epochs, batch_size):
+def run_hpbandster(optimizer, pipeline, config_space, time_budget, benchmark, data, max_epochs, batch_size):
     # starts a local nameserver
     nameserver, ns_port = hpbandster.distributed.utils.start_local_nameserver()
 
@@ -81,13 +81,14 @@ def run_hpbandster(model_based, pipeline, config_space, time_budget, benchmark, 
 
     # simple config space here: just one float between 0 and 1
 
-    if model_based:
+    if optimizer == "BOHB":
         print("Using Model Based Hyperband")
         CG = KDEEI(config_space, mode="sampling", num_samples=64)  # model-based hyperband
-    else:
+    elif optimizer == "hyperband":
         print("Using Hyperband")
         CG = hpbandster.config_generators.RandomSampling(config_space)  # hyperband on steriods
-
+    else:
+        raise NotImplementedError
 
 # XXX: change min_budget to 500
     # instantiating Hyperband with some minimal configuration
@@ -95,7 +96,7 @@ def run_hpbandster(model_based, pipeline, config_space, time_budget, benchmark, 
         config_generator=CG,
         run_id='0',
         eta=2,
-        min_budget=500,
+        min_budget=5,
         max_budget=time_budget,
         nameserver=nameserver,
         ns_port=ns_port,

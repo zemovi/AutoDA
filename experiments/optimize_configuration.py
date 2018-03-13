@@ -48,13 +48,13 @@ def benchmark_smac(args):
         output_file=args.output_file,
         best_configuration=(id_, run_info, trajectory),
         dataset=args.dataset,
-        run_id=args.run_id,
+        run_id=int(args.run_id),
     )
 
 def benchmark_hpbandster(args):
 
     best_configuration = run_hpbandster(
-        model_based=args.model_based,
+        optimizer=args.optimizer,
         pipeline=args.pipeline,
         config_space=args.config_space,
         time_budget=int(args.time_budget),
@@ -64,16 +64,17 @@ def benchmark_hpbandster(args):
         batch_size=int(args.batch_size)
     )
 
+
     # Config_id of the incumbent with smallest loss
     id_ = best_configuration.get_incumbent_id()
-    run_info = best_configuration.get_runs_by_id(id_)[-1]
+    run_info = best_configuration.get_runs_by_id(id_)[-1].__dict__
     trajectory = best_configuration.get_incumbent_trajectory()
 
     return to_json(
         output_file=args.output_file,
         best_configuration=(id_, run_info, trajectory),
         dataset=args.dataset,
-        run_id=args.run_id,
+        run_id=int(args.run_id),
     )
 
 
@@ -87,27 +88,28 @@ def main():
     smac_parser= subparsers.add_parser("SMAC", help="SMAC optimizer")
     smac_parser.set_defaults(func=benchmark_smac)
 
-    hpbandster_parser= subparsers.add_parser(
+    hyperband_parser= subparsers.add_parser(
             "hyperband",
             help="Hyperband optimizer on steriods")
 
-    hpbandster_parser.add_argument(
-        "--model-based",
-        action="store_true",
-        dest="model_based",
-        help="Model-based hyperband"
-    )
+    hyperband_parser.set_defaults(func=benchmark_hpbandster)
 
-    hpbandster_parser.set_defaults(func=benchmark_hpbandster)
+    bohb_parser= subparsers.add_parser(
+            "BOHB",
+            help="Hyperband optimizer on steriods")
+
+    bohb_parser.set_defaults(func=benchmark_hpbandster)
 
     parser.add_argument(
         "--benchmark",
+        default="AlexNet",
         help="Neural network to be trained with augmented data"
     )
 
     parser.add_argument(
         "--pipeline",
         dest="pipeline",
+        default="pipeline1",
         help="Data augmentation pipeline to use, choice:{standard, pipeline1, pipeline2}"
     )
 
@@ -119,7 +121,7 @@ def main():
         help="Maximum number of epochs to train network"
     )
     parser.add_argument(
-        "--batch-size", default=512,
+        "--batch-size", default=128,
         dest="batch_size",
         type=int,
         help="Size of a mini batch",
@@ -149,15 +151,13 @@ def main():
 
     optimizer_name = args.optimizer
 
-    if optimizer_name == "hyperband":
-        if args.model_based:
-            optimizer_name = "BOHB"
-
     default_output_file = path_join(
         abspath("."), "AutoData",
         args.dataset,
-        "hyperband/best_config_{optimizer}_{dataset}_{run_id}.json".format(
-            optimizer=args.optimizer, dataset=args.dataset, run_id=int(args.run_id)
+        args.optimizer,
+        args.benchmark,
+        "best_config_{pipeline}_{optimizer}_{benchmark}_{dataset}_{run_id}.json".format(
+            pipeline=args.pipeline, optimizer=args.optimizer, benchmark=args.benchmark, dataset=args.dataset, run_id=int(args.run_id)
         )
     )
 
@@ -168,7 +168,6 @@ def main():
 
     dataset = {"mnist": mnist, "cifar10": cifar10, "cifar100": cifar100}[args.dataset]
 
-    # max_epochs, batch_size, time_budget, optimizer, augment, run_id = int(args.max_epochs), int(args.batch_size), int(args.time_budget), args.optimizer, args.augment, args.run_id
 
     args.config_space = ImageAugmentation.get_config_space()
     args.data = get_data(dataset, args.augment)
