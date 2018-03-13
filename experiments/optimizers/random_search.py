@@ -10,7 +10,7 @@ from os.path import join as path_join, abspath
 
 
 from keras.datasets import mnist, cifar10
-sys.path.insert(0, abspath(path_join(__file__, "..", "..")))
+sys.path.insert(0, abspath(path_join(__file__, "..","..", "..")))
 
 from autoda.networks.utils import get_data
 from autoda.data_augmentation import ImageAugmentation
@@ -25,10 +25,10 @@ def main():
         "--benchmark", help="Neural network to be trained with augmented data"
     )
     parser.add_argument(
-        "--max_epochs", default=12, help="Maximum number of epochs to train network", type=int
+        "--max_epochs", default=200, help="Maximum number of epochs to train network", type=int
     )
     parser.add_argument(
-        "--batch_size", default=128, help="Size of a mini batch", type=int
+        "--batch_size", default=512, help="Size of a mini batch", type=int
     )
     parser.add_argument(
         "--augment", action="store_true", help="If the data should be augmented, if flag not set defaults to false"
@@ -59,13 +59,13 @@ def main():
 
     results = objective_function(
         configuration=sample_config, data=data, benchmark=benchmark, max_epochs=max_epochs,
-        batch_size=batch_size, time_budget=1800
+        batch_size=batch_size, time_budget=7200
     )
 
 
     path = path_join(abspath("."), "AutoData", args.dataset)
 
-    with open(os.path.join(path, "random_search_{}_{}.json".format(args.dataset, int(args.run_id))), "w") as fh:
+    with open(os.path.join(path, "no_augment_{}_{}.json".format(args.dataset, int(args.run_id))), "w") as fh:
         json.dump(results, fh)
 
 

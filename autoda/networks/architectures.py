@@ -1,4 +1,9 @@
+from functools import partial
+
 import keras
+from keras.models import Sequential
+from keras_contrib.applications.wide_resnet import WideResidualNetwork
+from keras_contrib.applications.resnet import ResNet18
 from keras.models import Sequential
 from keras.layers import (
     Activation, Conv2D, Dense,
@@ -62,7 +67,22 @@ def lenet(input_shape, num_classes,
     return model
 
 
+def resnet(input_shape, num_classes, wide=False):
+    if wide:
+        model = WideResidualNetwork(
+            depth=28, width=8, dropout_rate=0.0, weights=None,
+            input_shape=input_shape, classes=num_classes
+        )
+    else:
+        model = ResNet18(input_shape=input_shape, classes=num_classes)
+
+    model.summary()
+    return model
+
+
 ARCHITECTURES = {
     "AlexNet": alexnet,
     "LeNet": lenet,
+    "WideResNet": partial(resnet, wide=True),
+    "ResNet": resnet
 }
