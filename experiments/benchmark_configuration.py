@@ -122,10 +122,6 @@ def main():
 
     data = get_data(dataset, augment)
 
-    # XXX: Remove me
-    if augment:
-        configuration = ImageAugmentation.get_config_space().sample_configuration()
-
 
     results = objective_function(
         data=data, benchmark=benchmark,
