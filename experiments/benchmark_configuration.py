@@ -7,17 +7,31 @@ import sys
 import os
 import argparse
 import json
+
+import numpy as np
+import ConfigSpace as CS
+import time
+import keras
+import keras.backend.tensorflow_backend as K
+
+from keras.datasets import mnist, cifar10, cifar100
+
 from functools import partial
 
 from os.path import join as path_join, abspath
-
-
-from keras.datasets import mnist, cifar10, cifar100
 sys.path.insert(0, abspath(path_join(__file__, "..", "..")))
 
 from autoda.networks.architectures import ARCHITECTURES
 from autoda.data_augmentation import ImageAugmentation
 from autoda.networks.utils import get_data
+from keras.callbacks import ReduceLROnPlateau, EarlyStopping
+
+from autoda.data_augmentation import ImageAugmentation
+
+from autoda.networks.utils import (
+    _update_history, get_input_shape,
+)
+
 
 
 def train_and_test(data, configuration=None, benchmark="AlexNet", max_epochs=40, batch_size=512, time_budget=900):
