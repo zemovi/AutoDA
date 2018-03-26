@@ -5,6 +5,9 @@ scipy>=0.19.0
 numpy>=1.12.1
 hypothesis>=3.27.0
 smac>=0.7.0
-ConfigSpace==0.3.10
+ConfigSpace==0.4.5
 pytest>=3.2.2
+imgaug>=2.1.5
+Pyro>=4.71
+scikit_learn>=0.19.1
 nbval

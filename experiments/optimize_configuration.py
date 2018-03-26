@@ -8,6 +8,9 @@ import json
 import sys
 import os
 import argparse
+import Pyro4
+
+import pickle
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -21,6 +24,15 @@ from autoda.networks.train import objective_function
 from experiments.optimizers.hyperband import run_hpbandster
 from experiments.optimizers.smac import run_smac
 
+
+Pyro4.config.SERIALIZERS_ACCEPTED=set(["pickle"])
+Pyro4.config.SERIALIZER="pickle"
+
+def pickle_result(best_configuration, pickle_file):
+    "pickles the result object of hyperband or BO-HB"
+
+    with open(pickle_file, "wb") as fo:
+        pickle.dump(best_configuration, fo)
 
 def to_json(output_file, best_configuration, dataset, run_id):
         id_, run_info, trajectory = best_configuration
@@ -65,6 +77,7 @@ def benchmark_hpbandster(args):
     )
 
 
+    pickle_result(best_configuration, args.pickle_file)
     # Config_id of the incumbent with smallest loss
     id_ = best_configuration.get_incumbent_id()
     run_info = best_configuration.get_runs_by_id(id_)[-1].__dict__
@@ -136,7 +149,7 @@ def main():
         type=int, dest="time_budget"
     )
     parser.add_argument(
-        "--dataset", help="Dataset to train neural network on"
+        "--dataset", default="cifar10", help="Dataset to train neural network on"
     )
     parser.add_argument(
         "--run-id", help="The id of single job", dest="run_id"
@@ -147,7 +160,18 @@ def main():
     default=None, dest="output_file"
     )
 
+    parser.add_argument(
+    "--pickle-file", help="Output File",
+    default=None, dest="pickle_file"
+    )
+
     args = parser.parse_args()
+    assert args.pipeline is not None
+    assert args.run_id is not None
+    assert args.dataset is not None
+    assert args.optimizer is not None
+
+    print(args.pipeline, args.dataset, args.run_id)
 
     optimizer_name = args.optimizer
 
@@ -156,13 +180,27 @@ def main():
         args.dataset,
         args.optimizer,
         args.benchmark,
-        "best_config_{pipeline}_{optimizer}_{benchmark}_{dataset}_{run_id}.json".format(
-            pipeline=args.pipeline, optimizer=args.optimizer, benchmark=args.benchmark, dataset=args.dataset, run_id=int(args.run_id)
+        "best_config_{optimizer}_{dataset}_{run_id}.json".format(
+            optimizer=args.optimizer, dataset=args.dataset, run_id=int(args.run_id)
         )
     )
 
     args.output_file = args.output_file or default_output_file
 
+    default_pickle_file = path_join(
+        abspath("."), "AutoData",
+        args.dataset,
+        args.optimizer,
+        args.benchmark,
+        "pickles",
+        "{optimizer}_{dataset}_{run_id}.pickle".format(
+            optimizer=args.optimizer, dataset=args.dataset, run_id=int(args.run_id)
+            )
+        )
+    args.pickle_file = default_pickle_file
+
+    assert args.pickle_file is not None
+    assert args.output_file is not None
 
     configuration = None
 

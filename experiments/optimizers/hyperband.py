@@ -78,7 +78,6 @@ def run_hpbandster(optimizer, pipeline, config_space, time_budget, benchmark, da
 
     w.run(background=True)
 
-
     # simple config space here: just one float between 0 and 1
 
     if optimizer == "BOHB":
@@ -90,13 +89,12 @@ def run_hpbandster(optimizer, pipeline, config_space, time_budget, benchmark, da
     else:
         raise NotImplementedError
 
-# XXX: change min_budget to 500
     # instantiating Hyperband with some minimal configuration
     HB = hpbandster.HB_master.HpBandSter(
         config_generator=CG,
         run_id='0',
         eta=2,
-        min_budget=5,
+        min_budget=450,
         max_budget=time_budget,
         nameserver=nameserver,
         ns_port=ns_port,
@@ -104,7 +102,7 @@ def run_hpbandster(optimizer, pipeline, config_space, time_budget, benchmark, da
     )
     # runs one iteration if at least one worker is available, first parameter
     # is number of successive halving
-    res = HB.run(5, min_n_workers=1)
+    res = HB.run(10, min_n_workers=1)
     # shutdown the worker and the dispatcher
     HB.shutdown(shutdown_workers=True)
 
