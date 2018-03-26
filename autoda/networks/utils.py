@@ -37,6 +37,7 @@ def get_data(dataset, augment=True):
 
     y_train = y_train.reshape((y_train.shape[0]))
     y_valid = y_valid.reshape((y_valid.shape[0]))
+    y_test = y_test.reshape((y_test.shape[0]))
 
     if not augment:
         print("normalize training set beforehand if no data_augmentation")
@@ -56,6 +57,43 @@ def get_data(dataset, augment=True):
     y_test = keras.utils.to_categorical(y_test, num_classes)
 
     data = x_train, y_train, x_valid, y_valid, x_test, y_test, mean, variance
+
+    return data
+
+def get_train_test_data(dataset, augment=True):
+
+    # The data, shuffled and split between train and test sets:
+    (x_train, y_train), (x_test, y_test) = dataset.load_data()
+
+    num_classes = get_num_classes(y_train)
+
+    img_rows, img_cols = x_train.shape[2], x_train.shape[2]
+    # reshape 3D image to 4D
+    if x_train.ndim == 3:
+        x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
+        x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
+
+    # compute zero mean and unit variance for normalization
+    mean, variance = compute_zero_mean_unit_variance(x_train)
+
+    y_train = y_train.reshape((y_train.shape[0]))
+    y_test = y_test.reshape((y_test.shape[0]))
+
+    if not augment:
+        print("normalize training set beforehand if no data_augmentation")
+        x_train = normalize(x_train, mean, variance)
+    x_test = normalize(x_test, mean, variance)
+
+    # dimensions of data
+    print(x_train.shape, 'x_train Dimensions')
+    print(x_train.shape[0], 'train samples')
+    print(x_test.shape[0], 'test samples')
+
+    # Convert class vectors to binary class matrices.
+    y_train = keras.utils.to_categorical(y_train, num_classes)
+    y_test = keras.utils.to_categorical(y_test, num_classes)
+
+    data = x_train, y_train, x_test, y_test, mean, variance
 
     return data
 
