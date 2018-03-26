@@ -7,6 +7,7 @@ import sys
 import os
 import argparse
 import json
+import pickle
 
 import numpy as np
 import ConfigSpace as CS
@@ -22,8 +23,7 @@ from os.path import join as path_join, abspath
 sys.path.insert(0, abspath(path_join(__file__, "..", "..")))
 
 from autoda.networks.architectures import ARCHITECTURES
-from autoda.data_augmentation import ImageAugmentation
-from autoda.networks.utils import get_data
+from autoda.networks.utils import get_train_test_data
 from keras.callbacks import ReduceLROnPlateau, EarlyStopping
 
 from autoda.data_augmentation import ImageAugmentation
@@ -33,10 +33,9 @@ from autoda.networks.utils import (
 )
 
 
-
-def train_and_test(data, configuration=None, benchmark="AlexNet", max_epochs=40, batch_size=512, time_budget=900):
+def train_and_test(data, configuration=None, benchmark="AlexNet", max_epochs=40, batch_size=128, time_budget=900):
     # preprocess data
-    x_train, y_train, _, _, x_test, y_test, data_mean, data_variance = data
+    x_train, y_train, x_test, y_test, data_mean, data_variance = data
 
     input_shape = get_input_shape(x_train)  # NWHC
 
@@ -71,7 +70,6 @@ def train_and_test(data, configuration=None, benchmark="AlexNet", max_epochs=40,
                 if configuration:
                     print("Using real-time data augmentation.")
 
-                    # print("config:", config, "type", type(config))
                     if isinstance(configuration, CS.Configuration):
                         config = configuration
                     else:
@@ -125,10 +123,10 @@ def train_and_test(data, configuration=None, benchmark="AlexNet", max_epochs=40,
         "test_loss": test_loss,
         "test_error": 1 - test_accuracy,
         "used_budget": used_budget,
-        "train_history": train_history,
         "configs": config,
         "epochs": num_epochs,
-        "benchmark": benchmark
+        "benchmark": benchmark,
+        "train_history": train_history
     }
 
     if configuration:
@@ -153,8 +151,8 @@ def main():
     parser.add_argument(
         "--pipeline",
         dest="pipeline",
-        default="pipeline1",
-        help="Data augmentation pipeline to use, choice:{standard, pipeline1, pipeline2}"
+        default="best_config",
+        help="Data augmentation pipeline to use, choice:{default, no_augment, best_config}"
     )
 
     parser.add_argument(
@@ -200,7 +198,7 @@ def main():
     )
 
     parser.add_argument(
-        "--configuration_file",
+        "--configuration-file",
         help="Path to JSON file containing a configuration dictionary for "
              "our data augmentation. "
              "Defaults to `None`, which uses no data augmentation.",
@@ -210,23 +208,29 @@ def main():
 
     args = parser.parse_args()
 
+    assert args.run_id is not None
+    assert args.dataset is not None
+    assert args.time_budget is not None
+    assert args.pipeline is not None
+
     default_output_file = path_join(
         abspath("."), "AutoData",
         args.dataset,
-        args.optimizer,
+        args.pipeline, # this path holds only for no_augment and default results
         args.benchmark,
-        "{pipeline}_{run_id}.json".format(
-            pipeline=args.pipeline, run_id=int(args.run_id)
+        "{pipeline}_{dataset}_{run_id}.json".format(
+            pipeline=args.pipeline, dataset=args.dataset, run_id=int(args.run_id)
         )
     )
 
     args.output_file = args.output_file or default_output_file
 
+
     configuration = None
 
     if args.configuration_file:
         with open(args.configuration_file, "r") as configuration_file:
-            configuration = json.load(configuration_file)["best_run_info"]["info"]["configs"] # XXX: rewrite json format to fit optimized results from hyperband, smac or defualt
+            configuration = json.load(configuration_file)["best_run_info"]["info"]["configs"]
 
     augment = args.augment or (args.configuration_file is not None)
 
@@ -236,7 +240,7 @@ def main():
 
     max_epochs, batch_size, time_budget = int(args.max_epochs), int(args.batch_size), int(args.time_budget)
 
-    data = get_data(dataset, augment)
+    data = get_train_test_data(dataset, augment)
 
 
     results = train_and_test(
@@ -245,6 +249,26 @@ def main():
         max_epochs=max_epochs,
         configuration=configuration
     )
+
+    # XXX: separate path to base_path and json name, for future
+    pickle_file = path_join(
+        abspath("."), "AutoData",
+        args.dataset,
+        args.pipeline,
+        args.benchmark,
+        "pickles",
+        "{pipeline}_{dataset}_{run_id}.pickle".format(
+            pipeline=args.pipeline, dataset=args.dataset, run_id=int(args.run_id)
+            )
+        )
+
+    with open(pickle_file, "wb") as fo:
+        pickle.dump(results["train_history"], fo)
+
+    try:
+        del results["train_history"]
+    except KeyError:
+        pass
 
     with open(args.output_file, "w") as fh:
         json.dump(results, fh)
