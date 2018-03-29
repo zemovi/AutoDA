@@ -33,7 +33,7 @@ from autoda.networks.utils import (
 )
 
 
-def train_and_test(data, configuration=None, benchmark="AlexNet", max_epochs=40, batch_size=128, time_budget=900):
+def train_and_test(data, configuration=None, benchmark="AlexNet", max_epochs=200, batch_size=128, time_budget=7200):
     # preprocess data
     x_train, y_train, x_test, y_test, data_mean, data_variance = data
 

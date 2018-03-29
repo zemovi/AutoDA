@@ -11,3 +11,6 @@ imgaug>=2.1.5
 Pyro>=4.71
 scikit_learn>=0.19.1
 nbval
+git+git://github.com/keras-team/keras-contrib.git@master
+git+git://github.com/automl/HpBandSter@368513715608f78c3f89270554dd554cbf8df115
+
