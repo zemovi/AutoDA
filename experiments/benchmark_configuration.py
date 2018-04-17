@@ -33,7 +33,7 @@ from autoda.networks.utils import (
 )
 
 
-def train_and_test(data, configuration=None, benchmark="AlexNet", max_epochs=200, batch_size=128, time_budget=7200):
+def train_and_test(data, configuration=None, benchmark="AlexNet", max_epochs=200, batch_size=128, time_budget=7200, gpu_device="/gpu:1"):
     # preprocess data
     x_train, y_train, x_test, y_test, data_mean, data_variance = data
 
@@ -56,7 +56,7 @@ def train_and_test(data, configuration=None, benchmark="AlexNet", max_epochs=200
     network_function = ARCHITECTURES[benchmark]
     model = network_function(num_classes=num_classes, input_shape=input_shape)
 
-    with K.tf.device("/gpu:0"):
+    with K.tf.device('/gpu:0'):
         with session.graph.as_default():
             opt = keras.optimizers.Adam(lr=0.0016681005372000575)
 
@@ -183,6 +183,13 @@ def main():
         help="Dataset to train neural network on"
 
     )
+
+    parser.add_argument(
+        "--gpu-device",
+        default="/gpu:1",
+        help="gpu node to train"
+
+    )
     parser.add_argument(
         "--optimizer",
         default="hyperband",
@@ -212,6 +219,7 @@ def main():
     assert args.dataset is not None
     assert args.time_budget is not None
     assert args.pipeline is not None
+    assert args.gpu_device is not None
 
     default_output_file = path_join(
         abspath("."), "AutoData",
@@ -224,17 +232,25 @@ def main():
     )
 
     args.output_file = args.output_file or default_output_file
+    run_id=int(args.run_id)
 
 
     configuration = None
 
     if args.configuration_file:
         with open(args.configuration_file, "r") as configuration_file:
-            configuration = json.load(configuration_file)["best_run_info"]["info"]["configs"]
+            print(configuration_file)
+            try:
+                configuration = json.load(configuration_file)["best_run_info"]["info"]["configs"]
+            except TypeError:
+                # to read incumbent configuration and benchmark it on test set
+                configuration = json.load(configuration_file)
+                print("incumbent_config", configuration)
 
     augment = args.augment or (args.configuration_file is not None)
 
     benchmark = args.benchmark
+    gpu_device = args.gpu_device
 
     dataset = {"mnist": mnist, "cifar10": cifar10, "cifar100":cifar100}[args.dataset]
 
@@ -243,13 +259,14 @@ def main():
     data = get_train_test_data(dataset, augment)
 
 
-    results = train_and_test(
-        data=data, benchmark=benchmark,
-        time_budget=time_budget,
-        max_epochs=max_epochs,
-        configuration=configuration
-    )
-
+#    results = train_and_test(
+#        data=data, benchmark=benchmark,
+#        time_budget=time_budget,
+#        max_epochs=max_epochs,
+#        configuration=configuration,
+#        gpu_device=gpu_device
+#    )
+#
     # XXX: separate path to base_path and json name, for future
     pickle_file = path_join(
         abspath("."), "AutoData",
