@@ -122,13 +122,13 @@ def main():
     parser.add_argument(
         "--pipeline",
         dest="pipeline",
-        default="pipeline1",
+        default="best_config",
         help="Data augmentation pipeline to use, choice:{standard, pipeline1, pipeline2}"
     )
 
     parser.add_argument(
         "--max-epochs",
-        default=500,
+        default=200,
         dest="max_epochs",
         type=int,
         help="Maximum number of epochs to train network"

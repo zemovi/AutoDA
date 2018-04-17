@@ -77,6 +77,8 @@ def train_and_test(data, configuration=None, benchmark="AlexNet", max_epochs=200
                             configuration_space=ImageAugmentation.get_config_space(),
                             values=configuration,
                         )
+
+                    print("RANDOM_SAMPLED_CONFIG", config.get_dictionary())
                     augmenter = ImageAugmentation(config)
 
                     callbacks = []
@@ -130,7 +132,12 @@ def train_and_test(data, configuration=None, benchmark="AlexNet", max_epochs=200
     }
 
     if configuration:
-        result["configs"] = configuration.get_dictionary()
+        try:
+            result["configs"] = configuration.get_dictionary()
+
+        except AttributeError:
+            result["configs"] = configuration
+
     else:
         result["configs"] = {}
 
